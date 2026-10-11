@@ -42,10 +42,8 @@ vec3 vhDiskDirection(vec3 center,float radius,int i,int n){
     return normalize(center+r*(cos(phi)*X+sin(phi)*Y));
 }
 
-// The four sky presets describe *directional incident radiance*, represented
-// as non-negative spherical-Gaussian softboxes. Each lobe is normalized so its
-// sphere-mean equals its supplied weight*color, rather than acting as a delta
-// quadrature sample or as an isotropic emission term.
+// Environment radiance uses normalized spherical-Gaussian lobes;
+// each lobe's spherical mean matches its configured weight and color.
 vec3 vhEnvIncident(vec3 L){
     float sumW=0.0;
     vec3 v=vec3(0.0);
@@ -62,10 +60,8 @@ vec3 vhEnvIncident(vec3 L){
     return v/max(sumW,1e-6);
 }
 
-// Directional explicit source, integrated as a solid-angle disk for broad
-// body; anisotropic GGX is evaluated by half-vector importance quadrature.
-// Both are multiplied by the SAME direction-specific light visibility, and
-// only once. Coarse optical volume cannot darken the entire final material.
+// Finite-disk light integral: body uses angular quadrature, while GGX
+// uses half-vector importance sampling. Apply directional visibility once.
 void vhDirectDisk(vec3 center,vec3 color,float intensity,float radius,bool secondary,
                   vec3 P,vec3 V,vec3 T,vec3 N,float h,vec3 sigmaA,vec3 bodyColor,
                   out vec3 directBody,out vec3 directSpec,out vec3 directInternal){
@@ -80,9 +76,7 @@ void vhDirectDisk(vec3 center,vec3 color,float intensity,float radius,bool secon
         directBody+=vhEvalHairBody(L,V,N,bodyColor);
     }
     directBody/=float(bodyN);
-    // The anisotropic GGX half-vector is sampled in its natural measure.
-    // Testing the reflected L against the actual angular lamp gives the
-    // finite-disk integral, instead of editing roughness to fake source size.
+    // Sample GGX half-vectors and integrate reflected directions over the disk.
     float capCos=cos(max(radius,0.001));
     vec3 Ns=vhFiberSpecNormal(N,T);
     for(int i=0;i<n;++i){
@@ -105,9 +99,8 @@ void vhDirectDisk(vec3 center,vec3 color,float intensity,float radius,bool secon
         }
         directInternal/=float(internalN);
     }
-    // intensity is the solid-angle integrated source radiance.  A smaller
-    // disk has proportionally higher radiance, not weaker energy. Body and
-    // GGX now use the SAME normalized finite-area source measure.
+    // Intensity represents the source-integrated radiance. Normalize both
+    // body and GGX by the lamp's solid angle.
     float omega=2.0*VH_PI*(1.0-cos(max(radius,0.001)));
     vec3 integrated=max(color,vec3(0.0))*intensity*Tr;
     directBody*=integrated;
@@ -123,8 +116,7 @@ void vhEnvironment(vec3 P,vec3 V,vec3 T,vec3 N,float h,vec3 sigmaA,vec3 bodyColo
     int n=clamp(int(matl.lightingParams.z+0.5),4,24);
     int bodyN=min(2*n,24);
     vec3 X,Y;vhBasis(N,X,Y);
-    // p(L)=(N.L)/pi, so body integral estimator simplifies exactly to
-    // C*(1-Fi)*(1-Fo)*Lenv; it retains orientation against the light field.
+    // Cosine-weighted p(L)=(N.L)/pi cancels the body's Lambert factor.
     float NoV=max(dot(N,V),1e-5);
     float Fo=vhSchlickScalar(NoV,vhFiberF0());
     for(int i=0;i<bodyN;++i){
@@ -136,8 +128,7 @@ void vhEnvironment(vec3 P,vec3 V,vec3 T,vec3 N,float h,vec3 sigmaA,vec3 bodyColo
     }
     envBody*=bodyColor*((1.0-Fo)/float(bodyN));
     vec3 Ns=vhFiberSpecNormal(N,T);
-    // Specular importance quadrature follows the BRDF lobe instead of the
-    // sky's four source centers; highlights remain visible at low roughness.
+    // Importance-sample the specular lobe across the environment.
     for(int i=0;i<n;++i){
         vec3 H=vhSampleHairGgxHalfVector(Ns,T,vhHammersley(i,n));
         float VoH=dot(V,H);
@@ -147,9 +138,8 @@ void vhEnvironment(vec3 P,vec3 V,vec3 T,vec3 N,float h,vec3 sigmaA,vec3 bodyColo
         envSpec+=weight*vhEnvIncident(L);
     }
     envSpec/=float(n);
-    // The unvalidated guide-resolution extinction field is not applied to
-    // primary surface reflection (V45 black-hair regression). Optional TT/TRT
-    // remains volume-attenuated, and never controls the visibility of RGB.
+    // Guide-resolution optical extinction attenuates the secondary TT/TRT
+    // transport. Primary reflection uses the explicit illumination field.
     float internalShare=clamp(matl.lightingParams.w,0.0,0.35);
     if(internalShare>1e-5 || vhDebugView()==5){
         int envCount=clamp(int(matl.ambientParams.z+0.5),1,4);

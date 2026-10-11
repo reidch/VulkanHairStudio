@@ -2,7 +2,7 @@
 setlocal EnableExtensions
 cd /d "%~dp0"
 
-rem V47: never let configure/build/runtime diagnostics disappear when this
+rem Preserve configure/build/runtime diagnostics when this
 rem launcher is double-clicked. PowerShell keeps a persistent transcript and
 rem this wrapper pauses on every failure.
 where powershell.exe >nul 2>nul
@@ -17,7 +17,7 @@ powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\buil
 set "V47_RC=%ERRORLEVEL%"
 if not "%V47_RC%"=="0" (
   echo.
-  echo [V47] The build or application failed.
+  echo [Hair Studio] The build or application failed.
   echo Persistent diagnostics: "%~dp0logs\last_run.log"
   echo Runtime fatal record:  "%~dp0logs\last_fatal.txt" ^(if created^)
   echo.

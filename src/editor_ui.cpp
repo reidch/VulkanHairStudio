@@ -299,7 +299,7 @@ Actions draw(State& state,const vh::character::CharacterSurface& character,const
     const ImGuiWindowFlags fixed=ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoCollapse|ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoSavedSettings;
 
     ImGui::SetNextWindowPos(iv->Pos); ImGui::SetNextWindowSize({full.x,kTopHeight}); ImGui::Begin("##top",nullptr,fixed);
-    ImGui::TextColored(ImVec4(.80f,.68f,1,1),"V39 GROOM  /  V44 VISIBILITY-FIRST"); ImGui::SameLine(330);
+    ImGui::TextColored(ImVec4(.80f,.68f,1,1),"PROCEDURAL GROOM  /  GPU RENDERING"); ImGui::SameLine(330);
     for(StudioMode m:{StudioMode::Display,StudioMode::Edit,StudioMode::Physics}) { const bool active=state.mode==m; if(active) ImGui::PushStyleColor(ImGuiCol_Button,ImVec4(.36f,.23f,.56f,1));
         if(ImGui::Button(modeName(m),{98,30})){a.modeChangeRequested=true;a.requestedMode=m;} if(active) ImGui::PopStyleColor(); ImGui::SameLine(); }
     if(ImGui::Button("HAIRSTYLES",{124,30})) state.openHairstyleMenu=true;

@@ -64,12 +64,9 @@ vec3 averageEnvironmentRadiance(){
 }
 
 vec3 shadeNeutralPresentation(vec3 N,vec3 V){
-    // Presentation mode is deliberately isolated from the hair transport model.
-    // The mannequin is treated as if it sits inside a diffuse light tent:
-    // for uniform incident radiance, the Lambertian hemisphere integral is
-    // exactly rho * L, so this gives a stable shadow-free baseline without
-    // inventing an edge/rim term. Explicit lights remain ordinary BRDF lights,
-    // but hair DOM/volume attenuation is not applied to the mannequin.
+    // Neutral presentation approximates a uniform diffuse light tent.
+    // The Lambertian hemisphere integral gives rho * L; explicit lights
+    // retain their BRDF response.
     vec3 radiance=neutralBaseColor()*averageEnvironmentRadiance()*max(matl.headParams.y,0.0);
 
     if(matl.primaryDirI.w>0.0){

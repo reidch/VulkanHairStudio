@@ -1,10 +1,8 @@
 #ifndef VH_HAIR_BSDF_GLSL
 #define VH_HAIR_BSDF_GLSL
 
-// V47 retained reference single-fiber BCSDF for optional TT/TRT.
-// Follows the Chiang / PBRT HairBxDF decomposition f = sum_p Mp * Ap * Np.
-// This file deliberately contains no dense-cluster closure, view rim, diffuse
-// fill, final RGB tint, or light-size-to-roughness shortcut.
+// Single-fiber internal scattering follows the Chiang/PBRT decomposition
+// f = sum_p Mp * Ap * Np. The composition pass evaluates the visible surface.
 
 const float VH_PI = 3.14159265358979323846;
 const float VH_SQRT_PI_OVER_8 = 0.626657069;
@@ -94,7 +92,7 @@ vec3 vhSigmaA(float arc){
     }else{
         sigmaA=vhSigmaAFromAppearance(matl.colorMelanin.rgb,betaN);
     }
-    // Optional authored tip bleaching is an absorption gradient, never a final-light multiplier.
+    // Tip lightening varies the longitudinal absorption coefficient.
     float tipReduction=clamp(matl.fiberVariation.x,0.0,0.95);
     return sigmaA*max(0.05,1.0-tipReduction*clamp(arc,0.0,1.0));
 }

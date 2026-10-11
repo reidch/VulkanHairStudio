@@ -268,9 +268,8 @@ glm::vec3 keyPointWorld(const GroomPlacement& placement,const SweepKey& key,glm:
 }
 
 float catmullKnot(glm::vec3 a,glm::vec3 b) {
-    // Centripetal Catmull-Rom (alpha=1/2) is much less prone to cusps and
-    // overshoot than the uniform Hermite form when authored control spacing is
-    // non-uniform -- exactly the case for root/attach/scaffold transitions.
+    // Centripetal Catmull-Rom (alpha=1/2) limits overshoot for uneven
+    // spacing between root, attachment, and scaffold controls.
     return std::sqrt(std::max(glm::length(b-a),1e-6f));
 }
 
@@ -656,10 +655,7 @@ GroomAsset GroomBuilder::build(const GroomBinding& binding,
     for(const auto& branch:style.graph.branches) maxTopology=std::max(maxTopology,branch.topology);
     const uint32_t topologyCount=uint32_t(maxTopology)+1u;
 
-    // 1) Author dense rest geometry. This is embarrassingly parallel and is the
-    // only O(N*P) CPU materialization left in Display/Edit. Expensive reduced-
-    // basis discovery, sorting, exact validation and optical voxelization have
-    // all been removed from this synchronous path.
+    // 1) Build dense rest geometry in parallel, O(N*P).
     std::vector<RestStrandCpu> rest(kRenderStrandCount);
     parallelFor(kRenderStrandCount,[&](uint32_t dst){
         const uint32_t rootId=binding.renderOrder.empty()?dst:binding.renderOrder[dst];
@@ -682,10 +678,8 @@ GroomAsset GroomBuilder::build(const GroomBinding& binding,
     for(uint32_t n:topologyPopulation) if(n>0u) out.audit.smallestTopologyPopulation=std::min(out.audit.smallestTopologyPopulation,n);
     if(out.audit.unassignedFollicles!=0u) throw std::runtime_error("A follicle was not assigned to a valid groom topology");
 
-    // 2) Stable material-space reduced basis. For ordinary Edit-mode changes
-    // topology is unchanged, so reuse the exact previous guide identities and
-    // follower graph. This is dependency tracking, not a heuristic cache: only
-    // geometry/material fields changed, therefore the material-space basis did not.
+    // 2) Reuse guide identities and follower bindings when the groom
+    // topology is unchanged.
     bool reuseBasis = reusableBasis &&
                       reusableBasis->guideSourceStrands.size()==kSimulationGuideCount &&
                       reusableBasis->strands.size()==kRenderStrandCount &&
@@ -723,8 +717,7 @@ GroomAsset GroomBuilder::build(const GroomBinding& binding,
     out.restGuideFrames=buildGuideFrames(out.simulationGuides);
     const auto basisDone=std::chrono::steady_clock::now();
 
-    // 3) Material-domain guide neighbourhood acceleration is needed only when
-    // a new topology/basis is created. Reused edits preserve the exact graph.
+    // 3) Rebuild guide-neighborhood acceleration when topology changes.
     std::vector<std::vector<uint32_t>> grid;
     if(!reuseBasis) {
         grid.resize(kGridPhi*kGridTheta);
@@ -734,9 +727,7 @@ GroomAsset GroomBuilder::build(const GroomBinding& binding,
         }
     }
 
-    // 4) Bind dense visual fibers to the stable basis. Root ordering is already
-    // spatially coherent from GroomBinding::renderOrder, so there is no per-edit
-    // 110k sort or 2.2M-point reorder pass.
+    // 4) Bind render fibers in canonical spatial order.
     out.strands.resize(kRenderStrandCount);
     out.baseStrandPoints.resize(size_t(kRenderStrandCount)*kGuidePoints);
     out.restStrandPoints.resize(size_t(kRenderStrandCount)*kGuidePoints);
@@ -773,8 +764,7 @@ GroomAsset GroomBuilder::build(const GroomBinding& binding,
         }
     });
 
-    // Small sequential reduction for audit + represented material mass. This
-    // replaces the old O(G^2*P) nearest-guide support solve and follower RMS.
+    // Reduce represented material mass and binding diagnostics.
     out.audit.minDensity=1.0f; out.audit.maxDensity=0.0f;
     for(uint32_t i=0;i<kRenderStrandCount;++i) {
         const auto& rs=rest[i]; const auto& d=out.strands[i];

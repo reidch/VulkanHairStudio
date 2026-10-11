@@ -1,4 +1,4 @@
-# V47 directional reflection transport
+# Directional Fiber Reflection
 
 This note records the optical model and the numerical integration used by the current renderer. The [technical report](TECHNICAL_REPORT.md) presents the full pipeline, from procedural modeling to simulation and display.
 

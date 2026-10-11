@@ -1,8 +1,8 @@
 #ifndef VH_HAIR_RENDER_COMMON_GLSL
 #define VH_HAIR_RENDER_COMMON_GLSL
 
-// V47 directional reflection, byte-layout-stable lighting contract. Keep byte-for-byte aligned with
-// HairOpticsGpu in src/main.cpp. All values are linear radiometric quantities.
+// Lighting UBO layout matches HairOpticsGpu in src/main.cpp.
+// Radiance and material color are stored in linear space.
 layout(set=3,binding=0,std140) uniform HairOptics {
     vec4 colorMelanin;        // rgb dyed appearance target (linear), a eumelanin concentration
     vec4 pigmentRoughness;    // x pheomelanin ratio, y reserved, z beta_m, w beta_n

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Data-domain regression for the V39 hierarchical groom representation."""
+"""Validate hairstyle presets against the hierarchical groom schema."""
 from pathlib import Path
 import json, math, sys
 ROOT=Path(__file__).resolve().parents[1]/'assets'/'grooms'
@@ -50,5 +50,5 @@ for p in files:
         print(f"[PASS] {j['slug']:<24} branches={len(branches):2d} warps={warps:2d} rootPop=[{min(pop)},{max(pop)}]")
     except Exception as e:
         bad+=1; print('[FAIL]',p.name,e)
-print(f'V39 groom asset regression: {len(files)-bad}/{len(files)} passed')
+print(f'Groom asset validation: {len(files)-bad}/{len(files)} passed')
 sys.exit(1 if bad else 0)

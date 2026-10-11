@@ -4,8 +4,7 @@
 
 namespace vh::groom {
 
-// Pure authoring pipeline. It never queries collision, projects geometry, or
-// decides whether a groom is physics-ready.
+// Constructs a rest groom from style parameters and scalp bindings.
 class GroomBuilder {
 public:
     GroomAsset build(const GroomBinding& binding,

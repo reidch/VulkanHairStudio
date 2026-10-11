@@ -1,11 +1,8 @@
 #version 460
 #include "hair_render_common.glsl"
 
-// V40.2 directional finite-volume strand shadow construction. One workgroup
-// owns one reduced-guide segment and deposits projected fiber extinction into
-// four light-space depth layers for both explicit physical lights.  The mass is
-// normalized over the projected support capsule, so resolution changes do not
-// arbitrarily change shadow density.
+// Project segment extinction into directional deep-opacity layers.
+// Each workgroup deposits one guide segment's normalized capsule support.
 layout(local_size_x=128) in;
 const uint GUIDE_POINTS=20u;
 const uint SEGMENTS_PER_GUIDE=GUIDE_POINTS-1u;

@@ -1,10 +1,8 @@
 #version 460
 #include "hair_render_common.glsl"
 
-// V40.1 capsule splat.  One workgroup owns one reduced-guide segment and
-// deposits its conserved extinction mass directly into the voxels overlapped
-// by the segment support capsule.  This removes the old 1..8 point samples per
-// segment and the nested Gaussian normalization pass.
+// Each workgroup distributes one guide segment's extinction mass over
+// voxels intersecting its support capsule.
 layout(local_size_x=128) in;
 
 const uint GUIDE_POINTS=20u;
@@ -53,7 +51,7 @@ void main(){
     float cell=max(matl.opticalGrid.w,1e-5);
     float fixedScale=max(matl.renderParams.w,1.0);
     float radius=max(0.5*(guideMeta[i0].supportVolume.x+guideMeta[i1].supportVolume.x),0.5*cell);
-    // The support field represents a finite lock volume, not a centerline.
+    // Optical support uses the finite cross-section of the lock.
     float support=max(radius*max(matl.fiberShape.z,0.5),0.90*cell);
 
     vec3 lo=(min(a,b)-vec3(support)-matl.opticalGrid.xyz)/cell;

@@ -10,9 +10,8 @@ namespace vh::scalp {
 constexpr float kPi = 3.14159265358979323846f;
 inline float fract(float x) { return x - std::floor(x); }
 
-// Canonical follicle domain. This is intentionally independent of every
-// character mesh: strand i receives the same material/scalp coordinate for the
-// same seed, regardless of the head it is later bound to.
+// Canonical follicle coordinates are stable across character meshes for a
+// fixed strand index and seed.
 inline float thetaMax(float phi) {
     const float front=std::max(0.0f,std::sin(phi));
     const float back =std::max(0.0f,-std::sin(phi));

@@ -2,7 +2,7 @@
 ## Procedural Hairstyle Generation, GPU Dynamics, and Strand Rendering in Vulkan
 
 **Rundong Chen**  
-**Technical project report · October 2026 · V47 source revision**  
+**Technical project report · October 2026**  
 **Implementation:** C++17 · Vulkan · GLSL · Compute and Mesh Shaders  
 
 ---
@@ -58,7 +58,7 @@ Each operation owns one clear responsibility. A cut surface changes strand lengt
 
 ### 1.3 Implementation scale
 
-The following values describe the V47 configuration examined for this report:
+The implementation uses the following configuration:
 
 | Representation or setting | Implementation value |
 |---|---:|
@@ -655,7 +655,7 @@ The broader idea is useful beyond hair: a procedural object can be designed at o
 
 ## Appendix A. Source map and reproduction notes
 
-The report describes the files in the V47 source revision. This map is included so each major method can be located quickly.
+The following source map links each subsystem to its implementation.
 
 | Topic | Main source files |
 |---|---|

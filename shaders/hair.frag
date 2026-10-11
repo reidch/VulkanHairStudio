@@ -1,5 +1,5 @@
 #version 460
-// V44 primary visibility pass. No lighting is evaluated here.
+// Rasterize strand visibility and geometry for sample-resolved shading.
 // Hardware MSAA sample coverage is the visibility estimator; every surviving
 // sample stores the geometry needed by the later shading/composition pass.
 layout(location=0) in PerVertex {

@@ -5,6 +5,6 @@ if [[ "${V47_PREFLIGHT:-0}" == "1" ]] && command -v python3 >/dev/null; then
   python3 verify_project.py
   python3 tools/validate_groom_assets.py
 fi
-cmake -S . -B build_v47 -DCMAKE_BUILD_TYPE=Release
-cmake --build build_v47 -j
-exec ./build_v47/vulkan_hair_v47 "$@"
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+exec ./build/vulkan_hair_v47 "$@"

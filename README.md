@@ -22,7 +22,7 @@ The underlying idea is to give each scale of the problem the representation it n
 | Rendering | Vulkan task/mesh shaders, MSAA strand visibility, directional fiber reflection |
 | Implementation | C++17 · Vulkan 1.3 · GLSL |
 
-These are configuration and implementation figures, not measured performance benchmarks.
+Configuration values shown above; performance measurements are documented separately.
 
 ## What the system does
 
@@ -79,7 +79,7 @@ For the mathematical models, data layouts, and implementation choices, see the *
 .\build_and_run_windows.bat
 ```
 
-The launcher builds into `build_v47/`, starts the application, and writes persistent diagnostics to `logs/last_run.log` if something fails. For a fresh CMake build cache:
+The launcher builds into `build/`, starts the application, and writes persistent diagnostics to `logs/last_run.log` if something fails. For a fresh CMake build cache:
 
 ```powershell
 $env:V47_CLEAN = '1'
@@ -95,8 +95,8 @@ $env:V47_CLEAN = '1'
 You can also use CMake directly:
 
 ```bash
-cmake -S . -B build_v47 -DCMAKE_BUILD_TYPE=Release
-cmake --build build_v47 --config Release --parallel
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release --parallel
 ```
 
 **Note:** The ICT FaceKit neutral OBJ is fetched at configure time and copied beside the executable. The asset and its license are distributed by the upstream project; see [third-party notices](docs/THIRD_PARTY_NOTICES.md).
@@ -128,12 +128,12 @@ python tools/validate_groom_assets.py
 python tools/test_v47_transport.py
 ```
 
-These checks cover source invariants, style-asset structure, and selected numerical light-transport calculations. **Shader compilation, Vulkan execution, visual quality, and frame-time performance should be measured on the target GPU**; the source checks are not substitutes for those measurements. The [technical report](docs/TECHNICAL_REPORT.md) includes an evaluation plan for image comparisons, simulation error, and performance breakdowns.
+The checks cover source invariants, groom assets, and numerical light-transport calculations. The [technical report](docs/TECHNICAL_REPORT.md) also describes GPU timing, visual comparisons, and simulation diagnostics to collect on the target hardware.
 
 ## Research background and attribution
 
 The design draws on established ideas from position-based dynamics, strand and rod simulation, deep opacity maps, and physically based hair scattering. References are collected in the [technical report](docs/TECHNICAL_REPORT.md). External libraries and the ICT FaceKit head asset retain their respective upstream licenses; see [third-party notices](docs/THIRD_PARTY_NOTICES.md).
 
-**Author:** Rundong Chen · **Project:** Vulkan Hair Studio (V47)
+**Author:** Rundong Chen · **Project:** Vulkan Hair Studio
 
-The repository does not yet declare a license for the original project source. Add a top-level `LICENSE` with your chosen terms before inviting public reuse or contributions.
+**Source licensing:** No project-wide license has been selected yet. Third-party dependencies and assets retain their respective licenses.

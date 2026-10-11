@@ -22,7 +22,7 @@ FetchContent_Declare(nlohmann_json GIT_REPOSITORY https://github.com/nlohmann/js
 FetchContent_MakeAvailable(glfw glm imgui_src nlohmann_json)
 
 # -----------------------------------------------------------------------------
-# Authoritative character asset: complete released ICT FaceKit Light neutral OBJ (MIT).
+# ICT FaceKit Light neutral character mesh (MIT-licensed upstream asset).
 # Every source face is rendered and participates in contact. M_Face + M_BackHead
 # alone define the external human solid sign; the remaining components are
 # two-sided obstacles. The large morph-target repository is not vendored. For offline builds, point

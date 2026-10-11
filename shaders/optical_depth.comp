@@ -1,10 +1,8 @@
 #version 460
 #include "hair_render_common.glsl"
 
-// V40.1: directional optical depth is a grid sweep, not a ray-march from
-// every voxel.  Each invocation owns one complete scanline.  Complexity is
-// O(directionCount * dim^3), versus the previous O(directionCount * dim^4)
-// repeated sampling path.
+// Cumulative optical-depth sweep along each directional scanline.
+// Complexity: O(directionCount * dim^3).
 layout(local_size_x=64) in;
 layout(set=3,binding=1,std430) readonly buffer OpticalDensity { uint opticalSigmaFixed[]; };
 layout(set=3,binding=2,std430) writeonly buffer OpticalDepth { float opticalTau[]; };

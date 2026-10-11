@@ -16,7 +16,7 @@ Remove-Item $fatal -Force -ErrorAction SilentlyContinue
 Start-Transcript -Path $log -Force | Out-Null
 $exitCode = 1
 try {
-    Write-Host '=== Vulkan Hair V47 unified groom launcher ==='
+    Write-Host '=== Vulkan Hair Studio launcher ==='
     Write-Host ('Project: ' + $root)
     Write-Host ('Time:    ' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss zzz'))
     Write-Host ''
@@ -70,34 +70,34 @@ try {
         Write-Host ''
     }
 
-    if ($env:V47_CLEAN -eq '1' -and (Test-Path 'build_v47')) {
+    if ($env:V47_CLEAN -eq '1' -and (Test-Path 'build')) {
         Write-Host '--- clean build requested ---'
-        Remove-Item -Recurse -Force 'build_v47'
+        Remove-Item -Recurse -Force 'build'
     }
 
     Write-Host '--- CMake configure ---'
-    & $cmake -S . -B build_v47 -DCMAKE_BUILD_TYPE=Release
+    & $cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
     if ($LASTEXITCODE -ne 0) { throw ('CMake configure failed with exit code ' + $LASTEXITCODE) }
 
     Write-Host ''
     Write-Host '--- CMake build (Release) ---'
-    & $cmake --build build_v47 --config Release --parallel
+    & $cmake --build build --config Release --parallel
     if ($LASTEXITCODE -ne 0) { throw ('CMake build failed with exit code ' + $LASTEXITCODE) }
 
     # Do not assume a multi-config Visual Studio layout. CMake may legitimately
-    # use Ninja/NMake and place the executable directly under build_v47/.
+    # use Ninja/NMake and place the executable directly under build/.
     $candidates = @(
-        (Join-Path $root 'build_v47\Release\vulkan_hair_v47.exe'),
-        (Join-Path $root 'build_v47\vulkan_hair_v47.exe'),
-        (Join-Path $root 'build_v47\RelWithDebInfo\vulkan_hair_v47.exe')
+        (Join-Path $root 'build\Release\vulkan_hair_v47.exe'),
+        (Join-Path $root 'build\vulkan_hair_v47.exe'),
+        (Join-Path $root 'build\RelWithDebInfo\vulkan_hair_v47.exe')
     )
     $exe = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
     if (-not $exe) {
-        $found = Get-ChildItem -Path (Join-Path $root 'build_v47') -Filter 'vulkan_hair_v47.exe' -File -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+        $found = Get-ChildItem -Path (Join-Path $root 'build') -Filter 'vulkan_hair_v47.exe' -File -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($found) { $exe = $found.FullName }
     }
     if (-not $exe) {
-        throw 'Build reported success, but vulkan_hair_v47.exe could not be located under build_v47/.'
+        throw 'Build reported success, but vulkan_hair_v47.exe could not be located under build/.'
     }
 
     Write-Host ''

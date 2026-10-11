@@ -36,8 +36,7 @@ void main(){
         payload.firstStrand=c.range.x;
         payload.strandCount=c.range.y;
 
-        // V44 keeps every authored render strand. Geometric minification is handled
-        // by primary-visibility MSAA, not by widening/decimating fibers.
+        // Keep authored render strands at physical width for MSAA coverage.
         float d=max(length(frame.cameraPos.xyz-c.sphere.xyz)-c.sphere.w,0.03);
         float worldPerPixel=2.0*d*max(frame.screenParams.z,1e-4)/max(frame.screenParams.y,1.0);
         float pxRadius=c.sphere.w/max(worldPerPixel,1e-6);

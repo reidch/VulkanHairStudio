@@ -2,8 +2,8 @@
 #extension GL_GOOGLE_include_directive : require
 #include "hair_physics_common.glsl"
 
-// V37 reduced base-rod dynamics. High-frequency straight/wave/curl texture is
-// intrinsic rest geometry; this solver moves its low-frequency physical basis.
+// Guide dynamics evolve the reduced rest-shape basis. Fine strand texture
+// is reconstructed from the authored groom.
 layout(local_size_x=32) in;
 const uint GUIDE_POINTS=20u;
 

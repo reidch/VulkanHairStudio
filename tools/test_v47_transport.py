@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""V47 transport math regressions (CPU reference, no GPU runtime claims).
+"""CPU reference tests for directional fiber light transport.
 
-Tests mathematics used by the GLSL and catches the V45/V46 regressions:
+Covers the main numerical identities used by the GLSL shaders:
 constant body RGB independent of illumination, 4-point miss of narrow GGX,
 incorrect solid-angle normalization, energy inflation of softbox lobes.
 """
@@ -98,7 +98,7 @@ def main():
     assert abs(sgavg-1)<1e-12
 
     # Under a UNIFORM incident environment, only for that special case,
-    # Schlick body integral equals the V46 20/21 analytic formula.
+    # Compare numerical and analytic Schlick body integrals.
     expect=(1-.047)*(1-.047)*20/21
     for n in (12,20,64):
         a=body_cosine_quadrature(n)
@@ -106,7 +106,7 @@ def main():
     print(f'[PASS] Uniform incoming sky integrates to coated-Lambert {expect:.6f}')
 
     # For an upper-hemisphere directional lighting field, n-facing-up and
-    # n-facing-down should NOT have equal reflectance (V46 flat-dome failure).
+    # The directional environment produces different irradiance across orientations.
     env=lambda L: math.exp(2.7*(L[2]-1))*norm
     up=body_cosine_quadrature(64,(0.,0.,1.),env)
     down=body_cosine_quadrature(64,(0.,0.,-1.),env)

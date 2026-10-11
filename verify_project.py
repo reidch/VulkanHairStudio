@@ -8,7 +8,7 @@ def check(ok,msg):
 def text(rel): return (ROOT/rel).read_text(encoding='utf-8')
 asset=text('src/groom_asset.hpp'); builder=text('src/groom_builder.cpp'); style=text('src/groom_style.cpp')
 main=text('src/main.cpp'); ui=text('src/editor_ui.cpp'); contact=text('src/groom_contact.hpp'); character=text('src/character_surface.cpp'); cmake=text('CMakeLists.txt'); cache=text('src/groom_cache.cpp')
-check(all(x in asset for x in ['ClumpHierarchy','CutSurface','StyleWarp']),'V39 grammar exposes hierarchical clumps + cut surface + optional style warp')
+check(all(x in asset for x in ['ClumpHierarchy','CutSurface','StyleWarp']),'Groom grammar exposes hierarchical clumps + cut surface + optional style warp')
 check(all(x not in asset+builder+style for x in ['BundleProfile','ShapeLobe','EnvelopeLayer','HeroLock','v35Authoring']),'Superseded/parallel shaping concepts are absent')
 groom_style_block=asset.split('struct GroomStyle {',1)[1].split('struct alignas(16) StrandPointGpu',1)[0]
 check('shared_ptr' not in groom_style_block and all(x in groom_style_block for x in ['GroomTopologyGraph graph','ScalpFieldAtlas fields','PartCurve part','HairOptics optics']),'GroomStyle is one unified representation with no alternate authoring state')
@@ -31,7 +31,7 @@ check(all(x in main for x in ['createPipelineCache','vkGetPipelineCacheData','pi
 check('createSceneStaticGpuBuffers' in main and 'vkCmdFillBuffer' in main and 'Static GPU upload: one batch' in main,'Static scene GPU uploads are batched into one queue synchronization')
 check('startScenePreparation' in main and '(overlapped)' in main,'CPU character/contact preparation overlaps Vulkan startup work')
 check('O(3*N^2 scanlines)' in character and 'insideVotes' in character and 'nearestTriangle' in character,'Cold ContactField build uses scanline parity while retaining exact nearest-surface distances')
-check(all(x in cmake for x in ['src/groom_builder.cpp','src/groom_style.cpp','src/groom_contact.cpp','src/groom_cache.cpp']) and 'authoring.cpp' not in cmake,'Only the unified V39 translation units are compiled')
+check(all(x in cmake for x in ['src/groom_builder.cpp','src/groom_style.cpp','src/groom_contact.cpp','src/groom_cache.cpp']) and 'authoring.cpp' not in cmake,'Only the unified groom translation units are compiled')
 styles=sorted((ROOT/'assets/grooms').glob('*.json')); ok=True
 for p in styles:
     try:
@@ -50,7 +50,7 @@ for p in styles:
 check(palette_ok and 'applyDefaultPalette' in style and 'NaturalMelanin' in style,'Hairstyles default to deterministic black/golden-blonde melanin palettes')
 check(all(x in ui for x in ['Custom color','Natural pigment','ColorPicker3','ColorConvertRGBtoHSV','ColorConvertHSVtoRGB']),'Hair color UI keeps black/blonde as defaults while exposing unrestricted RGB/HSV custom color')
 hero={'butterfly-blowout','cup-bob','soft-wavy-long','sculptural-curly-bob'}
-check(hero.issubset({json.loads(p.read_text())['slug'] for p in styles}),'Four V39 hero grooms are present')
+check(hero.issubset({json.loads(p.read_text())['slug'] for p in styles}),'Four representative grooms are present')
 fashion={'butterfly-layered-long','curtain-bob','curtain-crop','defined-curly-bob','face-framing-long','high-pony','layered-bob','layered-half-up','low-pony','messy-bun','swept-back-layered','swept-undercut','textured-quiff','topknot-undercut','tousled-wavy-bob','twin-tail-layered','wolf-shag'}
 check(fashion.issubset({json.loads(p.read_text())['slug'] for p in styles}),'All 17 pre-revert fashion grooms are restored as schema-4 assets')
 hero_clean=True
@@ -59,7 +59,7 @@ for p in styles:
     if j['slug'] in hero and any(b.get('style_warps') for b in j['graph']['branches']): hero_clean=False
 check(hero_clean,'Hero grooms prove the core StyleVolume + ClumpHierarchy + CutSurface representation without StyleWarp patching')
 
-# V47 directional reflection invariants.
+# Rendering and light-transport invariants.
 hair_frag=text('shaders/hair.frag'); hair_bsdf=text('shaders/hair_bsdf.glsl'); hair_mesh=text('shaders/hair.mesh')
 hair_task=text('shaders/hair.task'); hair_compose=text('shaders/hair_compose.frag')
 optical_sample=text('shaders/hair_optical_sampling.glsl'); optical_splat=text('shaders/optical_splat.comp'); optical_depth=text('shaders/optical_depth.comp')
@@ -67,9 +67,9 @@ tone_frag=text('shaders/tonemap.frag'); head_frag=text('shaders/head.frag'); sha
 dom_splat=text('shaders/dom_splat.comp'); dom_prefix=text('shaders/dom_prefix.comp'); render_common=text('shaders/hair_render_common.glsl')
 lighting_header=text('src/editor_ui.hpp')
 
-check('project(vulkan_hair_v47_directional_reflection' in cmake,'CMake identifies V47 directional reflection')
+check('project(vulkan_hair_v47_directional_reflection' in cmake,'CMake identifies Directional reflection')
 check(all(x in main for x in ['sceneColorImage_','compositeColorImage_','hairGeom0Image_','hairGeom1Image_','hairComposePipeline_']),
-      'V44 separates base HDR scene, multisample hair geometry, and composed HDR output')
+      'Renderer separates base HDR scene, multisample hair geometry, and composed HDR output')
 check(all(x in main for x in ['sampleRateShading','hairMs.sampleShadingEnable=VK_TRUE','hairMs.minSampleShading=1.0f']),
       'Primary visibility requires true per-sample fragment shading')
 check('VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT|VK_IMAGE_USAGE_SAMPLED_BIT' in main and 'requires at least 2x MSAA' in main,
@@ -82,7 +82,7 @@ check(all(x in hair_mesh for x in ['physicalWidth=max(s.rootNormalDiameter.w*dia
       all(x not in hair_mesh+hair_task for x in ['stableWidth','coverageScale','widthScale']),
       'Primary visibility uses authored physical fiber diameter with no screen-space width floor')
 check('strandStride=1u' in hair_task and 'fiberPx<' not in hair_task,
-      'V44 does not decimate/widen subpixel strands in the reference visibility path')
+      'Visibility pass does not decimate/widen subpixel strands in the reference visibility path')
 check('gl_SampleMask' not in hair_frag+hair_mesh+hair_task and 'hash11' not in hair_frag+hair_mesh,
       'Stochastic sample-mask coverage and strand-hash visibility are removed')
 check('resolveHairFlow' not in tone_frag and 'hairVisibility' not in tone_frag and 'texture(sceneHdr' in tone_frag,
@@ -103,7 +103,7 @@ check('sourceVar' not in hair_bsdf+hair_compose and 'angularRadius' not in hair_
 check(all(x in hair_compose for x in ['vhDiskDirection','vhDirectDisk','vhHammersley','lightingParams.z','directSpec*=integrated/max(omega,1e-6)']),
       'Finite area lights use solid-angle-normalized body + importance-sampled GGX')
 check('vhEvalDenseHairScatter' not in hair_bsdf+hair_compose and 'bulkScatter' not in hair_bsdf+hair_compose and 'interacted*rho' not in hair_bsdf+hair_compose,
-      'V43 dense-cluster appearance closure is completely removed')
+      'Previous dense-cluster closure is completely removed')
 check(all(x not in hair_bsdf+hair_compose+hair_frag for x in ['msGain','lostEnv','rim=pow','wrap=max','radiance *=','radiance*=']),
       'No fake rim, wrap fill, arbitrary multiple-scattering gain, or final RGB tint remains in hair presentation')
 check('Tip bleaching is an absorption gradient' not in hair_bsdf or 'tipReduction' in hair_bsdf,
@@ -116,7 +116,7 @@ check('mat.pigmentRoughness=glm::vec4(o.melaninRedness,0.0f,o.longitudinalRoughn
 check(all(x in ui for x in ['HAIR OPTICS','Longitudinal roughness','Azimuthal roughness','IOR','Cuticle tilt']),
       'UI exposes only interpretable fiber-optics controls for the core appearance model')
 check('Flow resolve strength' not in ui and 'Flow resolve radius' not in ui,
-      'Deprecated V42 final-image smoothing controls are removed from the editor')
+      'Deprecated final-image smoothing controls are removed from the editor')
 check(all(x in ui for x in ['Directional coated-pigment BRDF','Internal scattering share','Hair shading diagnostic']),
       'UI exposes physically-based primary reflection and bounded internal share plus diagnostic')
 
@@ -178,7 +178,7 @@ def fields(block):
 check(fields(mesh_out)==fields(frag_in) and fields(mesh_out)==['tangent','arc','worldPos','fiberSide'],
       'Mesh/fragment visibility interface matches exactly')
 
-# V45 keeps surface color and internal transport explicitly separated.
+# Surface color and internal transport use separate scattering paths.
 surface_brdf=text('shaders/hair_surface_brdf.glsl')
 check(all(x in surface_brdf for x in ['vhFiberSurfaceNormal','vhAnisoGgxD','vhAnisoLambda','vhEvalHairBody','vhEvalHairSpec']),
       'Surface color is evaluated by a reconstructed-cylinder anisotropic GGX BRDF')
@@ -190,10 +190,10 @@ check('float w=clamp(matl.lightingParams.w,0.0,0.35)' in hair_compose and '(1.0-
       'TT/TRT competes for energy share, never adds unconstrained extra light')
 check('volumeScatter = 0.12f' in asset and 'volume_scatter' in style and 'o.volumeScatter' in main,
       'TT/TRT share is first-class with a conservative default')
-check('V47 directional reflection transport' in text('docs/RENDERING_NOTES.md') if (ROOT/'docs/RENDERING_NOTES.md').exists() else False,
-      'V47 architecture records reflection-first directional transport')
+check('# Directional Fiber Reflection' in text('docs/RENDERING_NOTES.md') if (ROOT/'docs/RENDERING_NOTES.md').exists() else False,
+      'Rendering notes describe directional fiber transport')
 
-# Regression guards for V45 black roots and V46 flat colors/missing highlights.
+# Regression checks for directional color response and highlights.
 check('vhEvalHairDomeBody' not in surface_brdf+hair_compose and 'vhEnvIncident' in hair_compose and 'envBody+=vhEnvIncident(L)*(1.0-Fi)' in hair_compose,
       'Dominant body uses directional incident lighting, never a flat dome constant')
 check('directBody*=integrated;' in hair_compose and 'directSpec*=integrated/max(omega,1e-6);' in hair_compose and
@@ -202,10 +202,10 @@ check('directBody*=integrated;' in hair_compose and 'directSpec*=integrated/max(
 check(all(x in hair_compose for x in ['debugView==1','debugView==2','debugView==3','debugView==4','debugView==5']) and
       'float(editorState_.hairDebugView)' in main,
       'GPU exposes material/spec/body/visibility/internal diagnostics')
-check('kDomLayers_ = 8u' in main and 'build_v47' in (ROOT/'tools/build_and_run_windows.ps1').read_text(),
-      'Higher DOM depth resolution and isolated V47 build cache')
+check('kDomLayers_ = 8u' in main and 'build' in (ROOT/'tools/build_and_run_windows.ps1').read_text(),
+      'Higher DOM depth resolution and isolated build cache')
 
-# Explicit V47 regression checks that did not exist in V46.
+# Sampling and lighting-quality regression checks.
 check('vhFiberSpecNormal' in surface_brdf and 'matl.fiberOptics.y' in surface_brdf,
       'Cuticle tilt now affects the directional dielectric highlight')
 check('vhHairSpecImportanceWeight' in surface_brdf and 'vhSampleHairGgxHalfVector' in surface_brdf,
@@ -220,5 +220,5 @@ check('referenceQuality_?20.0f:(performanceQuality_?6.0f:12.0f)' in main,
       'Quality modes scale quadrature work without changing material semantics')
 
 failed=[m for ok,m in checks if not ok]
-print(f'\nV47 expanded source invariant check: {len(checks)-len(failed)}/{len(checks)} passed')
+print(f'\nSource invariant check: {len(checks)-len(failed)}/{len(checks)} passed')
 if failed: sys.exit(1)

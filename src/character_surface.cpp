@@ -471,11 +471,9 @@ void CharacterSurface::loadOrBuildContactField(const std::filesystem::path& cach
     std::cout << "Building ContactField " << desiredDim << "^3 (" << 1000.0f*desiredCell
               << " mm cells; three-axis scanline sign + exact nearest-surface distances)...\n";
 
-    // First-principles acceleration: inside/outside is a topological parity
-    // property, so do not launch three independent BVH rays from every voxel.
-    // One ray traversal gives all crossings for an entire grid line. Repeat on
-    // the three principal axes and retain the old majority-vote robustness.
-    // This reduces sign work from O(3*N^3 ray queries) to O(3*N^2 scanlines).
+    // Surface sign follows ray-crossing parity. Accumulate crossings for
+    // each scanline on the three axes and combine them by majority vote.
+    // This reduces sign work to O(3*N^2 scanlines) from O(3*N^3 queries).
     std::vector<uint8_t> insideVotes(voxelCount,uint8_t(0));
     const uint32_t hw=std::max(1u,std::thread::hardware_concurrency());
     const uint32_t workers=std::max(1u,std::min(desiredDim,hw));
@@ -537,9 +535,8 @@ void CharacterSurface::loadOrBuildContactField(const std::filesystem::path& cach
     }
     const double signMs=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-signT0).count();
 
-    // Distances are geometric rather than topological, so retain exact BVH
-    // nearest-triangle queries for the external shell and all collision
-    // obstacles. Only the redundant per-voxel ray casting has been removed.
+    // Exact BVH nearest-triangle queries provide distances for the exterior
+    // shell and all collision obstacles.
     const auto distanceT0=std::chrono::steady_clock::now();
     std::atomic<uint32_t> nextZ{0u};
     std::vector<std::thread> pool; pool.reserve(workers);

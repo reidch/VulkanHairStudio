@@ -1,9 +1,8 @@
 #ifndef VH_HAIR_SURFACE_BRDF_GLSL
 #define VH_HAIR_SURFACE_BRDF_GLSL
 
-// V47: directional coated-pigment BRDF evaluated on the visible cylindrical
-// fiber surface. The broad pigment body and the narrow dielectric GGX are
-// separate scattering paths, both driven by incident radiance.
+// Directional fiber response: pigmented body reflection and anisotropic
+// dielectric GGX, evaluated on the visible cylindrical surface.
 vec3 vhAppearanceFromSigmaA(vec3 sigmaA,float betaN){
     return clamp(exp(-vhAppearanceFitD(betaN)*sqrt(max(sigmaA,vec3(0.0)))),vec3(0.0),vec3(1.0));
 }
@@ -38,7 +37,7 @@ float vhSchlickScalar(float cosTheta,float f0){
 }
 
 // Cuticle scales tilt the dielectric highlight distribution along the fiber.
-// Geometric cylinder N remains authoritative for body shading and visibility.
+// Body shading and coverage use the original cylinder normal.
 vec3 vhFiberSpecNormal(vec3 N,vec3 T){
     float tilt=clamp(matl.fiberOptics.y,-0.14,0.14);
     return normalize(cos(tilt)*N+sin(tilt)*T);
@@ -49,9 +48,8 @@ float vhFiberF0(){
     return vhSqr((eta-1.0)/(eta+1.0));
 }
 
-// The pigment term is a deliberately stated coated-Lambert closure, not a
-// literal Marschner fiber BCSDF. It reflects directional incident radiance;
-// no constant view-independent color is ever inserted in the final pass.
+// Coated-Lambert approximation for pigmented body reflection.
+// Fresnel transmission is evaluated at both interfaces.
 vec3 vhEvalHairBody(vec3 L,vec3 V,vec3 N,vec3 bodyColor){
     float NoL=max(dot(N,L),0.0);
     float NoV=max(dot(N,V),1e-5);
@@ -70,8 +68,7 @@ void vhSpecFrame(vec3 N,vec3 T,out vec3 X,out vec3 Y,out float ax,out float ay){
     ay=max(rb*rb,0.0025);
 }
 
-// Roughness is NEVER increased by the angular width of a light. The size of
-// a source is integrated as illumination, separately from material optics.
+// Material roughness and source angular extent are evaluated separately.
 float vhEvalHairSpec(vec3 L,vec3 V,vec3 N,vec3 T){
     float NoL=max(dot(N,L),0.0),NoV=max(dot(N,V),1e-5);
     if(NoL<=0.0) return 0.0;
@@ -92,9 +89,7 @@ void vhEvalHairSurfaceComponents(vec3 L,vec3 V,vec3 T,float h,vec3 bodyColor,
     spec=vec3(vhEvalHairSpec(normalize(L),normalize(V),vhFiberSpecNormal(N,normalize(T)),normalize(T)));
 }
 
-// NDF-sampled anisotropic GGX half-vector; its directional PDF is
-// p(L)=D(H)*(N.H)/(4*V.H). This estimator does not miss narrow highlights
-// just because four uniformly sampled lamp directions happen to miss them.
+// GGX half-vector sampling, with p(L)=D(H)*(N.H)/(4*V.H).
 vec3 vhSampleHairGgxHalfVector(vec3 N,vec3 T,vec2 xi){
     vec3 X,Y;float ax,ay;vhSpecFrame(N,T,X,Y,ax,ay);
     float phi=atan(ay*sin(2.0*VH_PI*xi.x),ax*cos(2.0*VH_PI*xi.x));
@@ -105,9 +100,7 @@ vec3 vhSampleHairGgxHalfVector(vec3 N,vec3 T,vec2 xi){
     return normalize((sqrt(tan2)/inv)*(cp*X+sp*Y)+(1.0/inv)*N);
 }
 
-// Microfacet NDF importance-weighted contribution. The explicit BRDF D and
-// the sampling PDF D*(N.H)/(4*V.H) cancel algebraically, avoiding a very
-// high-variance specular estimator under narrow anisotropic roughness.
+// NDF importance weighting cancels D against the half-vector PDF.
 float vhHairSpecImportanceWeight(vec3 L,vec3 V,vec3 N,vec3 T,vec3 H){
     float NoL=dot(N,L),NoV=dot(N,V),NoH=dot(N,H),VoH=dot(V,H);
     if(NoL<=0.0 || NoV<=0.0 || NoH<=0.0 || VoH<=0.0) return 0.0;

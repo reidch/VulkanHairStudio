@@ -1,8 +1,7 @@
 #version 460
 #extension GL_EXT_mesh_shader : require
 
-// V38: the reduced rod keeps 20 samples, while visual sampling is selected
-// per visible cluster from the nested 9/17/33 hierarchy.
+// Guide rods use 20 samples; render strands use adaptive 9/17/33 sampling.
 layout(local_size_x=32) in;
 layout(triangles,max_vertices=66,max_primitives=64) out;
 
@@ -115,8 +114,7 @@ void main(){
         vec3 V=safeNormalize(frame.cameraPos.xyz-P,vec3(0,0,1));
         vec3 ribbonSide=safeNormalize(cross(T,V),vec3(1,0,0));
         float diameterScale=mix(1.0,clamp(s.fiber.x,0.02,1.0),u);
-        // Exact physical fiber diameter. We intentionally do not impose a
-        // screen-space minimum width. MSAA sample occupancy carries fractional visibility.
+        // Use physical fiber diameter; MSAA coverage resolves subpixel occupancy.
         float physicalWidth=max(s.rootNormalDiameter.w*diameterScale,1e-7);
         float halfWidth=0.5*physicalWidth;
         uint v0=p*2u;

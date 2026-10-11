@@ -24,8 +24,7 @@ void main(){
     float cellVolume=h*h*h;
     float representedVolume=max(guideMeta[idx].y,0.0);
     float attachment=clamp(rest[idx].position.w,0.0,1.0);
-    // A physical tie/pin intentionally packs fibers more tightly than a free
-    // wisp, so do not ask the continuum pressure to undo the authored boundary.
+    // Reduce pressure near authored tie and pin constraints to preserve packing.
     representedVolume*=mix(1.0,0.28,attachment);
     float occupancy=representedVolume/max(cellVolume,1e-12);
     if(occupancy<=1e-8) return;

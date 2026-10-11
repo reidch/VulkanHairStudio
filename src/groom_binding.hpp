@@ -19,8 +19,8 @@ struct BoundRoot {
     glm::vec3 normal{0.0f,1.0f,0.0f};
 };
 
-// A similarity transform is deliberate.  A character may move/rotate/scale a
-// groom, but cannot anisotropically stretch its curls, wisps or cut silhouette.
+// Use a similarity transform to preserve curls and silhouette proportions
+// during character placement.
 struct GroomPlacement {
     glm::vec3 origin{0.0f};
     glm::mat3 worldFromCanonical{1.0f};

@@ -77,9 +77,7 @@ struct ClumpLevel {
     float waveCycles = 0.0f;
 };
 
-// Two levels are intentional: primary locks establish readable hairstyle mass,
-// secondary clumps break that mass into natural fiber groups. More levels add
-// authoring cost faster than visible information for real-time character hair.
+// Primary clumps shape large locks; secondary clumps organize finer groups.
 struct ClumpHierarchy {
     ClumpLevel primary{4.0f,4.0f,0.20f,0.02f,0.34f,0.18f,0.14f,0.055f,0.0f,0.0f};
     ClumpLevel secondary{10.0f,10.0f,0.26f,0.01f,0.18f,0.10f,0.20f,0.028f,0.0f,0.0f};
@@ -101,9 +99,7 @@ struct CutSurface {
     float minLength = 0.58f;
 };
 
-// Optional broad artistic deformation. Ordinary hairstyles should be authored
-// by StyleVolume + ClumpHierarchy + CutSurface; StyleWarp is reserved for
-// deliberate asymmetric/editorial shaping rather than corrective patchwork.
+// Optional local deformation for asymmetric or editorial styles.
 struct StyleWarp {
     glm::vec2 center{0.0f};
     glm::vec2 radius{0.45f};
@@ -172,8 +168,7 @@ struct ScalarField {
     std::vector<FieldControl> controls;
 };
 
-// Scalp fields are deliberately restricted to modulation. They cannot define
-// silhouette or macro flow; that keeps the resulting hairstyle explainable.
+// Scalp fields modulate the style volume, clumping, and fine texture.
 struct ScalpFieldAtlas {
     ScalarField length{1.0f,0.30f,1.20f,{}};
     ScalarField density{1.0f,0.0f,1.0f,{}};

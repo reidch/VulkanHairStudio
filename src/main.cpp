@@ -636,7 +636,7 @@ private:
         if (!glfwInit()) throw std::runtime_error("glfwInit failed");
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-        window_ = glfwCreateWindow(kWindowWidth, kWindowHeight, "Vulkan Hair V47 Directional Reflection Renderer", nullptr, nullptr);
+        window_ = glfwCreateWindow(kWindowWidth, kWindowHeight, "Vulkan Hair Studio", nullptr, nullptr);
         if (!window_) throw std::runtime_error("glfwCreateWindow failed");
         glfwSetWindowUserPointer(window_, this);
         glfwSetFramebufferSizeCallback(window_, framebufferResizeCallback);
@@ -720,9 +720,9 @@ private:
 
     void createInstance() {
         VkApplicationInfo ai{VK_STRUCTURE_TYPE_APPLICATION_INFO};
-        ai.pApplicationName = "Vulkan Hair V47 Directional Reflection Renderer";
+        ai.pApplicationName = "Vulkan Hair Studio";
         ai.applicationVersion = VK_MAKE_VERSION(44, 0, 0);
-        ai.pEngineName = "V47 Directional Reflection Renderer / V39 Groom Runtime";
+        ai.pEngineName = "Vulkan Hair Studio";
         ai.engineVersion = VK_MAKE_VERSION(1, 0, 0);
         ai.apiVersion = VK_API_VERSION_1_3;
 
@@ -783,14 +783,13 @@ private:
                 "vkGetPhysicalDeviceImageFormatProperties(HDR)");
         VkSampleCountFlags supported = deviceProps_.limits.framebufferColorSampleCounts &
                                        deviceProps_.limits.framebufferDepthSampleCounts & hdrProps.sampleCounts;
-        // V44 primary visibility is sample-resolved. Beauty/Reference prefer 8x;
-        // Performance uses 4x. We require at least 2x because the hair G-buffer
-        // is intentionally multisampled and sampled explicitly during composition.
+        // Hair visibility resolves individual MSAA samples. Beauty/Reference use
+        // 8x; Performance uses 4x. The G-buffer requires at least 2x MSAA.
         if (!performanceQuality_ && (supported & VK_SAMPLE_COUNT_8_BIT)) msaaSamples_ = VK_SAMPLE_COUNT_8_BIT;
         else if (performanceQuality_ && (supported & VK_SAMPLE_COUNT_4_BIT)) msaaSamples_ = VK_SAMPLE_COUNT_4_BIT;
         else if (supported & VK_SAMPLE_COUNT_4_BIT) msaaSamples_ = VK_SAMPLE_COUNT_4_BIT;
         else if (supported & VK_SAMPLE_COUNT_2_BIT) msaaSamples_ = VK_SAMPLE_COUNT_2_BIT;
-        else throw std::runtime_error("V44 visibility-first hair requires at least 2x MSAA support for the HDR/depth formats");
+        else throw std::runtime_error("Hair visibility requires at least 2x MSAA support for the HDR/depth formats");
 
         const char* qualityName=referenceQuality_?"Reference":(performanceQuality_?"Performance":"Beauty");
         const int envLobes=performanceQuality_?2:4;
@@ -1042,12 +1041,12 @@ private:
             VkMemoryRequirements req{}; vkGetImageMemoryRequirements(device_,image,&req);
             VkMemoryAllocateInfo ai{VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO};
             ai.allocationSize=req.size; ai.memoryTypeIndex=findMemoryType(req.memoryTypeBits,VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-            vkCheck(vkAllocateMemory(device_,&ai,nullptr,&memory),"vkAllocateMemory(V44 image)");
-            vkCheck(vkBindImageMemory(device_,image,memory,0),"vkBindImageMemory(V44 image)");
+            vkCheck(vkAllocateMemory(device_,&ai,nullptr,&memory),"vkAllocateMemory(hair image)");
+            vkCheck(vkBindImageMemory(device_,image,memory,0),"vkBindImageMemory(hair image)");
             VkImageViewCreateInfo vi{VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
             vi.image=image; vi.viewType=VK_IMAGE_VIEW_TYPE_2D; vi.format=hdrFormat_;
             vi.subresourceRange.aspectMask=VK_IMAGE_ASPECT_COLOR_BIT; vi.subresourceRange.levelCount=1; vi.subresourceRange.layerCount=1;
-            vkCheck(vkCreateImageView(device_,&vi,nullptr,&view),"vkCreateImageView(V44 image)");
+            vkCheck(vkCreateImageView(device_,&vi,nullptr,&view),"vkCreateImageView(hair image)");
         };
 
         createColorImage(VK_SAMPLE_COUNT_1_BIT,VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT|VK_IMAGE_USAGE_SAMPLED_BIT,
@@ -1525,7 +1524,7 @@ private:
         opticalCellSize_=extent/float(dim-3u);
         opticalOrigin_=center-glm::vec3(0.5f*opticalCellSize_*float(dim-1u));
         lastOpticalBuildMs_=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-t0).count();
-        std::cout<<"V44 optical bounds: "<<dim<<"^3, cell="<<1000.0f*opticalCellSize_
+        std::cout<<"Optical bounds: "<<dim<<"^3, cell="<<1000.0f*opticalCellSize_
                  <<" mm | density generated dynamically on GPU\n";
         opticalFieldDirty_=true;
         domFieldDirty_=true;
@@ -1995,7 +1994,7 @@ private:
         const HairOpticsGpu mat=materialForStyle(styleAsset_);
         std::memcpy(static_cast<std::byte*>(materialBuffer_.mapped)+materialStride_*frameIndex_,&mat,sizeof(mat));
 
-        std::string title = std::string("Vulkan Hair V47 Directional Reflection | ") + styleAsset_.name + (styleBuildPending_.load(std::memory_order_acquire)?" [building]":"") + " | " + deviceProps_.deviceName +
+        std::string title = std::string("Vulkan Hair Studio | ") + styleAsset_.name + (styleBuildPending_.load(std::memory_order_acquire)?" [building]":"") + " | " + deviceProps_.deviceName +
             " | mesh-native scalp | 110k -> 1600 rod guides + 48^3 volume | " + std::to_string(static_cast<uint32_t>(msaaSamples_)) +
             "x MSAA | mode " + std::string(editorState_.mode==vh::editor::StudioMode::Display ? "DISPLAY " :
                                       editorState_.mode==vh::editor::StudioMode::Edit ? "EDIT " : "PHYSICS ") +
@@ -2417,9 +2416,7 @@ private:
         if(timestampQueryPool_) vkCmdWriteTimestamp(commandBuffer_,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,timestampQueryPool_,timestampBase+1u);
 
         if(groom_ && (opticalFieldDirty_ || opticalUpdateThisFrame_)) {
-            // V44: the optical field follows the deformed reduced groom at its
-            // own low-frequency update rate.  The 120 Hz mechanics no longer
-            // force a 120 Hz extinction rebuild.
+            // Update optical extinction on its own cadence from the deformed guides.
             vkCmdFillBuffer(commandBuffer_,opticalDensity_.handle,0,VK_WHOLE_SIZE,0u);
             VkBufferMemoryBarrier clearBarrier{VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER};
             clearBarrier.srcAccessMask=VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -2487,9 +2484,8 @@ private:
 
         if(timestampQueryPool_) vkCmdWriteTimestamp(commandBuffer_,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,timestampQueryPool_,timestampBase+2u);
 
-        // V44: render the opaque scene first, then rasterize physical-width hair
-        // into a multisample visibility G-buffer, shade/compose those samples, and
-        // only then perform the display transform.
+        // Render scene HDR, rasterize sample-resolved hair geometry, compose
+        // strand radiance, then apply the display transform.
         const VkImageLayout sceneOld=sceneColorInitialized_?VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:VK_IMAGE_LAYOUT_UNDEFINED;
         transitionImage(commandBuffer_,sceneColorImage_,sceneOld,VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,VK_IMAGE_ASPECT_COLOR_BIT,
                         sceneColorInitialized_?VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT:VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
@@ -2806,7 +2802,7 @@ int main(int argc, char** argv) {
         try {
             std::filesystem::create_directories("logs");
             std::ofstream out(std::filesystem::path("logs") / "last_fatal.txt", std::ios::trunc);
-            if (out) out << "Vulkan Hair V44 fatal error\n" << message << "\n";
+            if (out) out << "Vulkan Hair Studio fatal error\n" << message << "\n";
         } catch (...) {
             // Diagnostics must never mask the original failure.
         }
