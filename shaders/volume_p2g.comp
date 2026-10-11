@@ -1,0 +1,50 @@
+#version 460
+#extension GL_GOOGLE_include_directive : require
+#include "hair_physics_common.glsl"
+
+// Scatter reduced guide material volume and momentum to the dynamic Eulerian
+// grid. Integer fixed-point atomics avoid optional shader-float-atomic features.
+layout(local_size_x=32) in;
+const uint GUIDE_POINTS=20u;
+
+struct Point { vec4 position; };
+layout(std430,set=2,binding=0) readonly buffer Current { Point cur[]; };
+layout(std430,set=2,binding=1) readonly buffer Rest { Point rest[]; };
+layout(std430,set=2,binding=3) readonly buffer Velocity { vec4 velocity[]; };
+
+void main(){
+    uint guide=gl_WorkGroupID.x;
+    uint lane=gl_LocalInvocationIndex;
+    if(lane>=GUIDE_POINTS || lane==0u) return;
+    uint idx=guide*GUIDE_POINTS+lane;
+
+    vec3 p=cur[idx].position.xyz;
+    vec3 v=velocity[idx].xyz;
+    float h=max(sim.grid.w,1e-5);
+    float cellVolume=h*h*h;
+    float representedVolume=max(guideMeta[idx].y,0.0);
+    float attachment=clamp(rest[idx].position.w,0.0,1.0);
+    // A physical tie/pin intentionally packs fibers more tightly than a free
+    // wisp, so do not ask the continuum pressure to undo the authored boundary.
+    representedVolume*=mix(1.0,0.28,attachment);
+    float occupancy=representedVolume/max(cellVolume,1e-12);
+    if(occupancy<=1e-8) return;
+
+    vec3 g=(p-sim.grid.xyz)/h;
+    ivec3 b=ivec3(floor(g));
+    vec3 f=fract(g);
+    if(any(lessThan(b,ivec3(0))) || any(greaterThan(b,ivec3(HP_GRID_DIM-2)))) return;
+
+    for(int z=0;z<2;++z) for(int y=0;y<2;++y) for(int x=0;x<2;++x) {
+        ivec3 o=ivec3(x,y,z);
+        vec3 q=mix(vec3(1.0)-f,f,vec3(o));
+        float w=q.x*q.y*q.z;
+        uint m=uint(clamp(round(occupancy*w*HP_OCC_SCALE),0.0,65535.0));
+        if(m==0u) continue;
+        uint gi=hpGridIndex(b+o);
+        atomicAdd(volumeAccum[gi].occupancy,m);
+        atomicAdd(volumeAccum[gi].momentumX,int(round(float(m)*v.x*HP_VEL_SCALE)));
+        atomicAdd(volumeAccum[gi].momentumY,int(round(float(m)*v.y*HP_VEL_SCALE)));
+        atomicAdd(volumeAccum[gi].momentumZ,int(round(float(m)*v.z*HP_VEL_SCALE)));
+    }
+}

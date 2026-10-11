@@ -1,0 +1,27 @@
+# CMake and locally generated build products
+/build/
+/build_*/
+/cmake-build-*/
+/CMakeFiles/
+/CMakeCache.txt
+
+# Runtime caches, logs, crash records
+/.vulkan_hair_cache/
+/logs/
+*.dmp
+*.stackdump
+
+# Editor, system and Python artifacts
+.vs/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+__pycache__/
+*.py[cod]
+
+# Generated shader binaries and binaries outside build directories
+*.spv
+*.exe
+*.obj
+*.pdb

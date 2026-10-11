@@ -1,0 +1,18 @@
+#version 460
+#include "hair_render_common.glsl"
+// Converts per-depth opacity bins into cumulative optical depth toward
+// each light. One invocation owns one light-space texel, so the in-place scan
+// has no cross-thread dependency.
+layout(local_size_x=128) in;
+layout(set=3,binding=3,std430) buffer PrimaryDeepOpacity { uint primaryDomFixed[]; };
+layout(set=3,binding=4,std430) buffer SecondaryDeepOpacity { uint secondaryDomFixed[]; };
+int ix(int p,int layer,int dim){return layer*dim*dim+p;}
+void prefix(bool secondary,int p,int dim,int layers){
+    uint running=0u;
+    for(int l=layers-1;l>=0;--l){ int i=ix(p,l,dim); uint raw; if(secondary) raw=secondaryDomFixed[i]; else raw=primaryDomFixed[i]; running+=raw; if(secondary)secondaryDomFixed[i]=running;else primaryDomFixed[i]=running; }
+}
+void main(){
+    int dim=max(int(matl.domParams.x+0.5),8); int layers=clamp(int(matl.domParams.y+0.5),2,8);
+    uint p=gl_GlobalInvocationID.x, count=uint(dim*dim); if(p>=count)return;
+    prefix(false,int(p),dim,layers); if(matl.secondaryDirI.w>1e-4) prefix(true,int(p),dim,layers);
+}

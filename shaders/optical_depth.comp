@@ -1,0 +1,58 @@
+#version 460
+#include "hair_render_common.glsl"
+
+// V40.1: directional optical depth is a grid sweep, not a ray-march from
+// every voxel.  Each invocation owns one complete scanline.  Complexity is
+// O(directionCount * dim^3), versus the previous O(directionCount * dim^4)
+// repeated sampling path.
+layout(local_size_x=64) in;
+layout(set=3,binding=1,std430) readonly buffer OpticalDensity { uint opticalSigmaFixed[]; };
+layout(set=3,binding=2,std430) writeonly buffer OpticalDepth { float opticalTau[]; };
+
+int idx3(ivec3 c,int dim){ return (c.z*dim+c.y)*dim+c.x; }
+int idx4(ivec3 c,int dim,int layer){ return layer*dim*dim*dim+idx3(c,dim); }
+float sigmaAt(ivec3 c,int dim,float fixedScale){
+    return float(opticalSigmaFixed[idx3(c,dim)])/fixedScale;
+}
+
+void main(){
+    int dim=max(int(matl.renderParams.x+0.5),2);
+    int dirCount=clamp(int(matl.renderParams.z+0.5),1,5);
+    uint linesPerLayer=uint(dim*dim);
+    uint lineId=gl_GlobalInvocationID.x;
+    uint total=linesPerLayer*uint(dirCount);
+    if(lineId>=total) return;
+
+    int layer=int(lineId/linesPerLayer);
+    uint localLine=lineId-uint(layer)*linesPerLayer;
+    int a=int(localLine%uint(dim));
+    int b=int(localLine/uint(dim));
+
+    vec3 L=vhOpticalDirection(layer);
+    vec3 A=abs(L);
+    int axis=(A.y>A.x)?1:0;
+    if(A.z>A[axis]) axis=2;
+    float signDir=L[axis]>=0.0?1.0:-1.0;
+
+    float cell=max(matl.opticalGrid.w,1e-5);
+    float fixedScale=max(matl.renderParams.w,1.0);
+    // Convert one dominant-axis cell to distance along the actual normalized
+    // light direction.  This keeps optical thickness approximately invariant
+    // for diagonal studio directions while retaining the scanline dataflow.
+    float ds=cell/max(A[axis],0.35);
+    float running=0.0;
+
+    // Traverse from the outgoing boundary back into the volume.  Store the
+    // accumulated optical depth toward the chosen direction.  A half-cell
+    // self contribution keeps the result centered at the voxel sample point.
+    for(int s=0;s<dim;++s){
+        int q=(signDir>0.0)?(dim-1-s):s;
+        ivec3 c;
+        if(axis==0) c=ivec3(q,a,b);
+        else if(axis==1) c=ivec3(a,q,b);
+        else c=ivec3(a,b,q);
+        float sig=max(sigmaAt(c,dim,fixedScale),0.0);
+        opticalTau[idx4(c,dim,layer)]=running+0.5*sig*ds;
+        running+=sig*ds;
+    }
+}

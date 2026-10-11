@@ -1,0 +1,132 @@
+#version 460
+#extension GL_EXT_mesh_shader : require
+
+// V38: the reduced rod keeps 20 samples, while visual sampling is selected
+// per visible cluster from the nested 9/17/33 hierarchy.
+layout(local_size_x=32) in;
+layout(triangles,max_vertices=66,max_primitives=64) out;
+
+const uint GUIDE_POINTS=20u;
+const uint RENDER_POINTS_MAX=33u;
+
+struct Point { vec4 position; };
+struct GuideFrame { vec4 normal; };
+struct StrandDesc {
+    vec4 rootNormalDiameter;
+    uvec4 guides;
+    vec4 weights;
+    vec4 fiber;
+};
+struct Payload {
+    uint firstStrand;
+    uint strandCount;
+    uint strandStride;
+    uint renderPoints;
+};
+
+taskPayloadSharedEXT Payload payload;
+layout(std430,set=1,binding=0) readonly buffer StrandBuffer { StrandDesc strands[]; };
+layout(std430,set=1,binding=2) readonly buffer RestStrandBuffer { Point restStrandPoint[]; };
+layout(std430,set=2,binding=0) readonly buffer GuideCurrent { Point guideCurrent[]; };
+layout(std430,set=2,binding=1) readonly buffer GuideRest { Point guideRest[]; };
+layout(std430,set=2,binding=8) readonly buffer CurrentFrameBuffer { GuideFrame currentFrame[]; };
+layout(std430,set=2,binding=9) readonly buffer RestFrameBuffer { GuideFrame restFrame[]; };
+
+layout(set=0,binding=0,std140) uniform Frame {
+    mat4 viewProj;
+    vec4 cameraPos;
+    vec4 frustumPlanes[6];
+    vec4 screenParams;
+} frame;
+
+layout(location=0) out PerVertex {
+    vec3 tangent;
+    float arc;
+    vec3 worldPos;
+    float fiberSide;
+} vOut[];
+
+shared vec3 sCenter[GUIDE_POINTS];
+
+vec3 safeNormalize(vec3 v,vec3 f){ float l2=dot(v,v); return l2>1e-12?v*inversesqrt(l2):f; }
+
+vec3 guideTangent(uint g,uint p,bool current){
+    uint a=p>0u?p-1u:p, b=p+1u<GUIDE_POINTS?p+1u:p;
+    vec3 A=current?guideCurrent[g*GUIDE_POINTS+a].position.xyz:guideRest[g*GUIDE_POINTS+a].position.xyz;
+    vec3 B=current?guideCurrent[g*GUIDE_POINTS+b].position.xyz:guideRest[g*GUIDE_POINTS+b].position.xyz;
+    return safeNormalize(B-A,vec3(0,-1,0));
+}
+
+vec3 frameDeform(vec3 local,vec3 Tr,vec3 Nr,vec3 Tc,vec3 Nc){
+    Nr=safeNormalize(Nr-Tr*dot(Nr,Tr),vec3(1,0,0));
+    vec3 Br=safeNormalize(cross(Tr,Nr),vec3(0,0,1)); Nr=safeNormalize(cross(Br,Tr),Nr);
+    Nc=safeNormalize(Nc-Tc*dot(Nc,Tc),vec3(1,0,0));
+    vec3 Bc=safeNormalize(cross(Tc,Nc),vec3(0,0,1)); Nc=safeNormalize(cross(Bc,Tc),Nc);
+    return dot(local,Nr)*Nc+dot(local,Br)*Bc+dot(local,Tr)*Tc;
+}
+
+vec3 embeddedPoint(uint strandId,StrandDesc s,uint p){
+    vec3 restP=restStrandPoint[strandId*GUIDE_POINTS+p].position.xyz;
+    if(p==0u) return restP;
+    vec3 q=vec3(0.0);
+    for(uint k=0u;k<4u;++k){
+        uint g=s.guides[k], idx=g*GUIDE_POINTS+p;
+        vec3 gr=guideRest[idx].position.xyz, gc=guideCurrent[idx].position.xyz;
+        vec3 Tr=guideTangent(g,p,false), Tc=guideTangent(g,p,true);
+        vec3 deformed=gc+frameDeform(restP-gr,Tr,restFrame[idx].normal.xyz,Tc,currentFrame[idx].normal.xyz);
+        q+=s.weights[k]*deformed;
+    }
+    float u=float(p)/float(GUIDE_POINTS-1u);
+    return mix(restP,q,smoothstep(0.03,0.20,u));
+}
+
+vec3 centerSample(float u){
+    float x=clamp(u,0.0,1.0)*float(GUIDE_POINTS-1u);
+    uint i=uint(floor(x)); float t=x-float(i);
+    uint i1=min(i,GUIDE_POINTS-1u), i0=i1>0u?i1-1u:i1;
+    uint i2=min(i1+1u,GUIDE_POINTS-1u), i3=min(i1+2u,GUIDE_POINTS-1u);
+    vec3 p0=sCenter[i0],p1=sCenter[i1],p2=sCenter[i2],p3=sCenter[i3];
+    float t2=t*t,t3=t2*t;
+    return 0.5*((2.0*p1)+(-p0+p2)*t+(2.0*p0-5.0*p1+4.0*p2-p3)*t2+(-p0+3.0*p1-3.0*p2+p3)*t3);
+}
+vec3 centerTangent(float u,uint renderPoints){
+    float du=1.0/float(max(renderPoints,2u)-1u);
+    return safeNormalize(centerSample(min(1.0,u+du))-centerSample(max(0.0,u-du)),vec3(0,-1,0));
+}
+void writeVertex(uint id,vec3 p,vec3 t,float u,float fiberSide){
+    gl_MeshVerticesEXT[id].gl_Position=frame.viewProj*vec4(p,1.0);
+    vOut[id].tangent=t; vOut[id].arc=u;
+    vOut[id].worldPos=p; vOut[id].fiberSide=fiberSide;
+}
+
+void main(){
+    uint strandId=payload.firstStrand+gl_WorkGroupID.x*payload.strandStride;
+    uint end=payload.firstStrand+payload.strandCount;
+    if(strandId>=end){ if(gl_LocalInvocationIndex==0u) SetMeshOutputsEXT(0u,0u); return; }
+    uint rp=clamp(payload.renderPoints,9u,RENDER_POINTS_MAX);
+    if(gl_LocalInvocationIndex==0u) SetMeshOutputsEXT(rp*2u,(rp-1u)*2u);
+    StrandDesc s=strands[strandId];
+    for(uint p=gl_LocalInvocationIndex;p<GUIDE_POINTS;p+=gl_WorkGroupSize.x) sCenter[p]=embeddedPoint(strandId,s,p);
+    barrier();
+
+    for(uint p=gl_LocalInvocationIndex;p<rp;p+=gl_WorkGroupSize.x){
+        float u=float(p)/float(rp-1u);
+        vec3 P=centerSample(u), T=centerTangent(u,rp);
+        vec3 V=safeNormalize(frame.cameraPos.xyz-P,vec3(0,0,1));
+        vec3 ribbonSide=safeNormalize(cross(T,V),vec3(1,0,0));
+        float diameterScale=mix(1.0,clamp(s.fiber.x,0.02,1.0),u);
+        // Exact physical fiber diameter. We intentionally do not impose a
+        // screen-space minimum width. MSAA sample occupancy carries fractional visibility.
+        float physicalWidth=max(s.rootNormalDiameter.w*diameterScale,1e-7);
+        float halfWidth=0.5*physicalWidth;
+        uint v0=p*2u;
+        writeVertex(v0,P-halfWidth*ribbonSide,T,u,-1.0);
+        writeVertex(v0+1u,P+halfWidth*ribbonSide,T,u,1.0);
+    }
+    barrier();
+    for(uint seg=gl_LocalInvocationIndex;seg+1u<rp;seg+=gl_WorkGroupSize.x){
+        uint base=seg*2u, prim=seg*2u;
+        gl_PrimitiveTriangleIndicesEXT[prim]=uvec3(base,base+1u,base+3u);
+        gl_PrimitiveTriangleIndicesEXT[prim+1u]=uvec3(base,base+3u,base+2u);
+    }
+}

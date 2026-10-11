@@ -1,0 +1,1548 @@
+{
+  "schema": 4,
+  "slug": "butterfly-blowout",
+  "name": "Butterfly Blowout",
+  "material": {
+    "default_palette": "auto"
+  },
+  "part": {
+    "points": [],
+    "flow_strength": 0.0,
+    "influence_radius": 0.32,
+    "gap_radius": 0.0
+  },
+  "fields": {
+    "length": {
+      "base": 1,
+      "min": 0.3,
+      "max": 1.2,
+      "controls": []
+    },
+    "density": {
+      "base": 1,
+      "min": 0,
+      "max": 1,
+      "controls": []
+    },
+    "volume": {
+      "base": 1.08,
+      "min": 0.35,
+      "max": 1.7,
+      "controls": []
+    },
+    "texture_amplitude": {
+      "base": 1,
+      "min": 0,
+      "max": 2,
+      "controls": []
+    },
+    "texture_frequency": {
+      "base": 1,
+      "min": 0.25,
+      "max": 2.5,
+      "controls": []
+    },
+    "detail": {
+      "base": 0.72,
+      "min": 0,
+      "max": 2,
+      "controls": []
+    }
+  },
+  "graph": {
+    "keys": [
+      {
+        "center": [
+          -0.66,
+          0.66,
+          0.72
+        ],
+        "axis_u": [
+          -0.15,
+          0,
+          0.02
+        ],
+        "axis_v": [
+          0,
+          0.08,
+          0.06
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          -0.92,
+          -0.02,
+          0.64
+        ],
+        "axis_u": [
+          -0.14,
+          0,
+          0.01
+        ],
+        "axis_v": [
+          0,
+          0.07,
+          0.05
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          -0.9,
+          -0.76,
+          0.5599999999999999
+        ],
+        "axis_u": [
+          -0.13,
+          0,
+          0
+        ],
+        "axis_v": [
+          0,
+          0.07,
+          0.045
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          -0.82,
+          -1.42,
+          0.48
+        ],
+        "axis_u": [
+          -0.11,
+          0,
+          0
+        ],
+        "axis_v": [
+          0,
+          0.05,
+          0.035
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          0.66,
+          0.66,
+          0.72
+        ],
+        "axis_u": [
+          0.15,
+          0,
+          0.02
+        ],
+        "axis_v": [
+          0,
+          0.08,
+          0.06
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          0.92,
+          -0.02,
+          0.64
+        ],
+        "axis_u": [
+          0.14,
+          0,
+          0.01
+        ],
+        "axis_v": [
+          0,
+          0.07,
+          0.05
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          0.9,
+          -0.76,
+          0.5599999999999999
+        ],
+        "axis_u": [
+          0.13,
+          0,
+          0
+        ],
+        "axis_v": [
+          0,
+          0.07,
+          0.045
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          0.82,
+          -1.42,
+          0.48
+        ],
+        "axis_u": [
+          0.11,
+          0,
+          0
+        ],
+        "axis_v": [
+          0,
+          0.05,
+          0.035
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          -0.56,
+          0.66,
+          0.2
+        ],
+        "axis_u": [
+          -0.15,
+          0,
+          0.02
+        ],
+        "axis_v": [
+          0,
+          0.08,
+          0.06
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          -0.82,
+          -0.02,
+          0.12000000000000001
+        ],
+        "axis_u": [
+          -0.14,
+          0,
+          0.01
+        ],
+        "axis_v": [
+          0,
+          0.07,
+          0.05
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          -0.78,
+          -0.76,
+          0.04000000000000001
+        ],
+        "axis_u": [
+          -0.13,
+          0,
+          0
+        ],
+        "axis_v": [
+          0,
+          0.07,
+          0.045
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          -0.7,
+          -1.42,
+          -0.03999999999999998
+        ],
+        "axis_u": [
+          -0.11,
+          0,
+          0
+        ],
+        "axis_v": [
+          0,
+          0.05,
+          0.035
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          0.56,
+          0.66,
+          0.2
+        ],
+        "axis_u": [
+          0.15,
+          0,
+          0.02
+        ],
+        "axis_v": [
+          0,
+          0.08,
+          0.06
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          0.82,
+          -0.02,
+          0.12000000000000001
+        ],
+        "axis_u": [
+          0.14,
+          0,
+          0.01
+        ],
+        "axis_v": [
+          0,
+          0.07,
+          0.05
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          0.78,
+          -0.76,
+          0.04000000000000001
+        ],
+        "axis_u": [
+          0.13,
+          0,
+          0
+        ],
+        "axis_v": [
+          0,
+          0.07,
+          0.045
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          0.7,
+          -1.42,
+          -0.03999999999999998
+        ],
+        "axis_u": [
+          0.11,
+          0,
+          0
+        ],
+        "axis_v": [
+          0,
+          0.05,
+          0.035
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          -0.56,
+          0.66,
+          -0.62
+        ],
+        "axis_u": [
+          -0.15,
+          0,
+          0.02
+        ],
+        "axis_v": [
+          0,
+          0.08,
+          0.06
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          -0.82,
+          -0.02,
+          -0.7
+        ],
+        "axis_u": [
+          -0.14,
+          0,
+          0.01
+        ],
+        "axis_v": [
+          0,
+          0.07,
+          0.05
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          -0.78,
+          -0.76,
+          -0.78
+        ],
+        "axis_u": [
+          -0.13,
+          0,
+          0
+        ],
+        "axis_v": [
+          0,
+          0.07,
+          0.045
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          -0.7,
+          -1.42,
+          -0.86
+        ],
+        "axis_u": [
+          -0.11,
+          0,
+          0
+        ],
+        "axis_v": [
+          0,
+          0.05,
+          0.035
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          0.56,
+          0.66,
+          -0.62
+        ],
+        "axis_u": [
+          0.15,
+          0,
+          0.02
+        ],
+        "axis_v": [
+          0,
+          0.08,
+          0.06
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          0.82,
+          -0.02,
+          -0.7
+        ],
+        "axis_u": [
+          0.14,
+          0,
+          0.01
+        ],
+        "axis_v": [
+          0,
+          0.07,
+          0.05
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          0.78,
+          -0.76,
+          -0.78
+        ],
+        "axis_u": [
+          0.13,
+          0,
+          0
+        ],
+        "axis_v": [
+          0,
+          0.07,
+          0.045
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          0.7,
+          -1.42,
+          -0.86
+        ],
+        "axis_u": [
+          0.11,
+          0,
+          0
+        ],
+        "axis_v": [
+          0,
+          0.05,
+          0.035
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          0.0,
+          0.66,
+          -0.62
+        ],
+        "axis_u": [
+          0.15,
+          0,
+          0.02
+        ],
+        "axis_v": [
+          0,
+          0.08,
+          0.06
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          0.0,
+          -0.02,
+          -0.7
+        ],
+        "axis_u": [
+          0.14,
+          0,
+          0.01
+        ],
+        "axis_v": [
+          0,
+          0.07,
+          0.05
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          0.0,
+          -0.76,
+          -0.78
+        ],
+        "axis_u": [
+          0.13,
+          0,
+          0
+        ],
+        "axis_v": [
+          0,
+          0.07,
+          0.045
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          0.0,
+          -1.42,
+          -0.86
+        ],
+        "axis_u": [
+          0.11,
+          0,
+          0
+        ],
+        "axis_v": [
+          0,
+          0.05,
+          0.035
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          0.0,
+          0.66,
+          -0.62
+        ],
+        "axis_u": [
+          0.15,
+          0,
+          0.02
+        ],
+        "axis_v": [
+          0,
+          0.08,
+          0.06
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          0.0,
+          -0.02,
+          -0.7
+        ],
+        "axis_u": [
+          0.14,
+          0,
+          0.01
+        ],
+        "axis_v": [
+          0,
+          0.07,
+          0.05
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          0.0,
+          -0.76,
+          -0.78
+        ],
+        "axis_u": [
+          0.13,
+          0,
+          0
+        ],
+        "axis_v": [
+          0,
+          0.07,
+          0.045
+        ],
+        "attachment": 0
+      },
+      {
+        "center": [
+          0.0,
+          -1.42,
+          -0.86
+        ],
+        "axis_u": [
+          0.11,
+          0,
+          0
+        ],
+        "axis_v": [
+          0,
+          0.05,
+          0.035
+        ],
+        "attachment": 0
+      }
+    ],
+    "curves": [
+      {
+        "topology": 0,
+        "keys": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "topology": 1,
+        "keys": [
+          4,
+          5,
+          6,
+          7
+        ]
+      },
+      {
+        "topology": 0,
+        "keys": [
+          8,
+          9,
+          10,
+          11
+        ]
+      },
+      {
+        "topology": 1,
+        "keys": [
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "topology": 0,
+        "keys": [
+          16,
+          17,
+          18,
+          19
+        ]
+      },
+      {
+        "topology": 1,
+        "keys": [
+          20,
+          21,
+          22,
+          23
+        ]
+      },
+      {
+        "topology": 2,
+        "keys": [
+          24,
+          25,
+          26,
+          27
+        ]
+      },
+      {
+        "topology": 2,
+        "keys": [
+          28,
+          29,
+          30,
+          31
+        ]
+      }
+    ],
+    "branches": [
+      {
+        "curve": 0,
+        "topology": 0,
+        "root": {
+          "name": "front-left",
+          "center": [
+            -0.3419547289005357,
+            0.6939669498275576,
+            0.6336219976686396
+          ],
+          "inv_radius": [
+            2.5,
+            2.1,
+            2.1
+          ],
+          "material_extent": [
+            0.58,
+            0.52
+          ],
+          "bias": 0.06
+        },
+        "material_scale": [
+          0.8,
+          0.78
+        ],
+        "material_offset": [
+          0,
+          0
+        ],
+        "texture": {
+          "type": "wavy",
+          "amplitude": 0.001,
+          "cycles": 1.35,
+          "start": 0.1,
+          "irregularity": 0.07,
+          "phase_coherence": 0.82,
+          "secondary": 0.14
+        },
+        "detail": {
+          "frizz_amplitude": 0.00026,
+          "frizz_frequency": 5.8,
+          "frizz_fraction": 0.24,
+          "flyaway_amplitude": 0.0025,
+          "flyaway_fraction": 0.02
+        },
+        "clumps": {
+          "primary": {
+            "cells_u": 4,
+            "cells_v": 4,
+            "site_jitter": 0.22,
+            "root_tightness": 0.015,
+            "mid_tightness": 0.38,
+            "tip_tightness": 0.2,
+            "crossover": 0.18,
+            "drift": 0.055,
+            "wave_amplitude": 0.115,
+            "wave_cycles": 0.85
+          },
+          "secondary": {
+            "cells_u": 10,
+            "cells_v": 10,
+            "site_jitter": 0.28,
+            "root_tightness": 0.01,
+            "mid_tightness": 0.19,
+            "tip_tightness": 0.1,
+            "crossover": 0.24,
+            "drift": 0.024,
+            "wave_amplitude": 0.022,
+            "wave_cycles": 2.0
+          },
+          "tip_spread": 0.12,
+          "twist_turns": 0.015
+        },
+        "cut_surface": {
+          "controls": [
+            [
+              0.745,
+              0.7672,
+              0.7672,
+              0.745
+            ],
+            [
+              0.7683,
+              0.7906,
+              0.7906,
+              0.7683
+            ],
+            [
+              0.7917,
+              0.8139,
+              0.8139,
+              0.7917
+            ],
+            [
+              0.815,
+              0.8372,
+              0.8372,
+              0.815
+            ]
+          ],
+          "breakup": 0.018,
+          "min_length": 0.58
+        },
+        "style_warps": []
+      },
+      {
+        "curve": 1,
+        "topology": 1,
+        "root": {
+          "name": "front-right",
+          "center": [
+            0.3419547289005357,
+            0.6939669498275576,
+            0.6336219976686396
+          ],
+          "inv_radius": [
+            2.5,
+            2.1,
+            2.1
+          ],
+          "material_extent": [
+            0.58,
+            0.52
+          ],
+          "bias": 0.06
+        },
+        "material_scale": [
+          0.8,
+          0.78
+        ],
+        "material_offset": [
+          0,
+          0
+        ],
+        "texture": {
+          "type": "wavy",
+          "amplitude": 0.001,
+          "cycles": 1.35,
+          "start": 0.1,
+          "irregularity": 0.07,
+          "phase_coherence": 0.82,
+          "secondary": 0.14
+        },
+        "detail": {
+          "frizz_amplitude": 0.00026,
+          "frizz_frequency": 5.8,
+          "frizz_fraction": 0.24,
+          "flyaway_amplitude": 0.0025,
+          "flyaway_fraction": 0.02
+        },
+        "clumps": {
+          "primary": {
+            "cells_u": 4,
+            "cells_v": 4,
+            "site_jitter": 0.22,
+            "root_tightness": 0.015,
+            "mid_tightness": 0.38,
+            "tip_tightness": 0.2,
+            "crossover": 0.18,
+            "drift": 0.055,
+            "wave_amplitude": 0.115,
+            "wave_cycles": 0.85
+          },
+          "secondary": {
+            "cells_u": 10,
+            "cells_v": 10,
+            "site_jitter": 0.28,
+            "root_tightness": 0.01,
+            "mid_tightness": 0.19,
+            "tip_tightness": 0.1,
+            "crossover": 0.24,
+            "drift": 0.024,
+            "wave_amplitude": 0.022,
+            "wave_cycles": 2.0
+          },
+          "tip_spread": 0.12,
+          "twist_turns": 0.015
+        },
+        "cut_surface": {
+          "controls": [
+            [
+              0.745,
+              0.7672,
+              0.7672,
+              0.745
+            ],
+            [
+              0.7683,
+              0.7906,
+              0.7906,
+              0.7683
+            ],
+            [
+              0.7917,
+              0.8139,
+              0.8139,
+              0.7917
+            ],
+            [
+              0.815,
+              0.8372,
+              0.8372,
+              0.815
+            ]
+          ],
+          "breakup": 0.018,
+          "min_length": 0.58
+        },
+        "style_warps": []
+      },
+      {
+        "curve": 2,
+        "topology": 0,
+        "root": {
+          "name": "side-left",
+          "center": [
+            -0.9495358598026258,
+            0.23738396495065645,
+            0.20501342427556693
+          ],
+          "inv_radius": [
+            1.9,
+            2.3,
+            2.3
+          ],
+          "material_extent": [
+            0.58,
+            0.58
+          ],
+          "bias": 0
+        },
+        "material_scale": [
+          0.8,
+          0.78
+        ],
+        "material_offset": [
+          0,
+          0
+        ],
+        "texture": {
+          "type": "wavy",
+          "amplitude": 0.001,
+          "cycles": 1.35,
+          "start": 0.1,
+          "irregularity": 0.07,
+          "phase_coherence": 0.82,
+          "secondary": 0.14
+        },
+        "detail": {
+          "frizz_amplitude": 0.00026,
+          "frizz_frequency": 5.8,
+          "frizz_fraction": 0.24,
+          "flyaway_amplitude": 0.0025,
+          "flyaway_fraction": 0.02
+        },
+        "clumps": {
+          "primary": {
+            "cells_u": 4,
+            "cells_v": 4,
+            "site_jitter": 0.22,
+            "root_tightness": 0.015,
+            "mid_tightness": 0.38,
+            "tip_tightness": 0.2,
+            "crossover": 0.18,
+            "drift": 0.055,
+            "wave_amplitude": 0.115,
+            "wave_cycles": 0.85
+          },
+          "secondary": {
+            "cells_u": 10,
+            "cells_v": 10,
+            "site_jitter": 0.28,
+            "root_tightness": 0.01,
+            "mid_tightness": 0.19,
+            "tip_tightness": 0.1,
+            "crossover": 0.24,
+            "drift": 0.024,
+            "wave_amplitude": 0.022,
+            "wave_cycles": 2.0
+          },
+          "tip_spread": 0.12,
+          "twist_turns": 0.015
+        },
+        "cut_surface": {
+          "controls": [
+            [
+              0.845,
+              0.8539,
+              0.8539,
+              0.845
+            ],
+            [
+              0.8683,
+              0.8772,
+              0.8772,
+              0.8683
+            ],
+            [
+              0.8917,
+              0.9006,
+              0.9006,
+              0.8917
+            ],
+            [
+              0.915,
+              0.9239,
+              0.9239,
+              0.915
+            ]
+          ],
+          "breakup": 0.018,
+          "min_length": 0.58
+        },
+        "style_warps": []
+      },
+      {
+        "curve": 3,
+        "topology": 1,
+        "root": {
+          "name": "side-right",
+          "center": [
+            0.9495358598026258,
+            0.23738396495065645,
+            0.20501342427556693
+          ],
+          "inv_radius": [
+            1.9,
+            2.3,
+            2.3
+          ],
+          "material_extent": [
+            0.58,
+            0.58
+          ],
+          "bias": 0
+        },
+        "material_scale": [
+          0.8,
+          0.78
+        ],
+        "material_offset": [
+          0,
+          0
+        ],
+        "texture": {
+          "type": "wavy",
+          "amplitude": 0.001,
+          "cycles": 1.35,
+          "start": 0.1,
+          "irregularity": 0.07,
+          "phase_coherence": 0.82,
+          "secondary": 0.14
+        },
+        "detail": {
+          "frizz_amplitude": 0.00026,
+          "frizz_frequency": 5.8,
+          "frizz_fraction": 0.24,
+          "flyaway_amplitude": 0.0025,
+          "flyaway_fraction": 0.02
+        },
+        "clumps": {
+          "primary": {
+            "cells_u": 4,
+            "cells_v": 4,
+            "site_jitter": 0.22,
+            "root_tightness": 0.015,
+            "mid_tightness": 0.38,
+            "tip_tightness": 0.2,
+            "crossover": 0.18,
+            "drift": 0.055,
+            "wave_amplitude": 0.115,
+            "wave_cycles": 0.85
+          },
+          "secondary": {
+            "cells_u": 10,
+            "cells_v": 10,
+            "site_jitter": 0.28,
+            "root_tightness": 0.01,
+            "mid_tightness": 0.19,
+            "tip_tightness": 0.1,
+            "crossover": 0.24,
+            "drift": 0.024,
+            "wave_amplitude": 0.022,
+            "wave_cycles": 2.0
+          },
+          "tip_spread": 0.12,
+          "twist_turns": 0.015
+        },
+        "cut_surface": {
+          "controls": [
+            [
+              0.845,
+              0.8539,
+              0.8539,
+              0.845
+            ],
+            [
+              0.8683,
+              0.8772,
+              0.8772,
+              0.8683
+            ],
+            [
+              0.8917,
+              0.9006,
+              0.9006,
+              0.8917
+            ],
+            [
+              0.915,
+              0.9239,
+              0.9239,
+              0.915
+            ]
+          ],
+          "breakup": 0.018,
+          "min_length": 0.58
+        },
+        "style_warps": []
+      },
+      {
+        "curve": 4,
+        "topology": 0,
+        "root": {
+          "name": "crown-left",
+          "center": [
+            -0.34953240498536786,
+            0.9355132015784846,
+            -0.0514018242625541
+          ],
+          "inv_radius": [
+            2.4,
+            1.9,
+            2.0
+          ],
+          "material_extent": [
+            0.56,
+            0.56
+          ],
+          "bias": 0.03
+        },
+        "material_scale": [
+          0.8,
+          0.78
+        ],
+        "material_offset": [
+          0,
+          0
+        ],
+        "texture": {
+          "type": "wavy",
+          "amplitude": 0.001,
+          "cycles": 1.35,
+          "start": 0.1,
+          "irregularity": 0.07,
+          "phase_coherence": 0.82,
+          "secondary": 0.14
+        },
+        "detail": {
+          "frizz_amplitude": 0.00026,
+          "frizz_frequency": 5.8,
+          "frizz_fraction": 0.24,
+          "flyaway_amplitude": 0.0025,
+          "flyaway_fraction": 0.02
+        },
+        "clumps": {
+          "primary": {
+            "cells_u": 4,
+            "cells_v": 4,
+            "site_jitter": 0.22,
+            "root_tightness": 0.015,
+            "mid_tightness": 0.38,
+            "tip_tightness": 0.2,
+            "crossover": 0.18,
+            "drift": 0.055,
+            "wave_amplitude": 0.115,
+            "wave_cycles": 0.85
+          },
+          "secondary": {
+            "cells_u": 10,
+            "cells_v": 10,
+            "site_jitter": 0.28,
+            "root_tightness": 0.01,
+            "mid_tightness": 0.19,
+            "tip_tightness": 0.1,
+            "crossover": 0.24,
+            "drift": 0.024,
+            "wave_amplitude": 0.022,
+            "wave_cycles": 2.0
+          },
+          "tip_spread": 0.12,
+          "twist_turns": 0.015
+        },
+        "cut_surface": {
+          "controls": [
+            [
+              0.885,
+              0.8939,
+              0.8939,
+              0.885
+            ],
+            [
+              0.9083,
+              0.9172,
+              0.9172,
+              0.9083
+            ],
+            [
+              0.9317,
+              0.9406,
+              0.9406,
+              0.9317
+            ],
+            [
+              0.955,
+              0.9639,
+              0.9639,
+              0.955
+            ]
+          ],
+          "breakup": 0.018,
+          "min_length": 0.58
+        },
+        "style_warps": []
+      },
+      {
+        "curve": 5,
+        "topology": 1,
+        "root": {
+          "name": "crown-right",
+          "center": [
+            0.34953240498536786,
+            0.9355132015784846,
+            -0.0514018242625541
+          ],
+          "inv_radius": [
+            2.4,
+            1.9,
+            2.0
+          ],
+          "material_extent": [
+            0.56,
+            0.56
+          ],
+          "bias": 0.03
+        },
+        "material_scale": [
+          0.8,
+          0.78
+        ],
+        "material_offset": [
+          0,
+          0
+        ],
+        "texture": {
+          "type": "wavy",
+          "amplitude": 0.001,
+          "cycles": 1.35,
+          "start": 0.1,
+          "irregularity": 0.07,
+          "phase_coherence": 0.82,
+          "secondary": 0.14
+        },
+        "detail": {
+          "frizz_amplitude": 0.00026,
+          "frizz_frequency": 5.8,
+          "frizz_fraction": 0.24,
+          "flyaway_amplitude": 0.0025,
+          "flyaway_fraction": 0.02
+        },
+        "clumps": {
+          "primary": {
+            "cells_u": 4,
+            "cells_v": 4,
+            "site_jitter": 0.22,
+            "root_tightness": 0.015,
+            "mid_tightness": 0.38,
+            "tip_tightness": 0.2,
+            "crossover": 0.18,
+            "drift": 0.055,
+            "wave_amplitude": 0.115,
+            "wave_cycles": 0.85
+          },
+          "secondary": {
+            "cells_u": 10,
+            "cells_v": 10,
+            "site_jitter": 0.28,
+            "root_tightness": 0.01,
+            "mid_tightness": 0.19,
+            "tip_tightness": 0.1,
+            "crossover": 0.24,
+            "drift": 0.024,
+            "wave_amplitude": 0.022,
+            "wave_cycles": 2.0
+          },
+          "tip_spread": 0.12,
+          "twist_turns": 0.015
+        },
+        "cut_surface": {
+          "controls": [
+            [
+              0.885,
+              0.8939,
+              0.8939,
+              0.885
+            ],
+            [
+              0.9083,
+              0.9172,
+              0.9172,
+              0.9083
+            ],
+            [
+              0.9317,
+              0.9406,
+              0.9406,
+              0.9317
+            ],
+            [
+              0.955,
+              0.9639,
+              0.9639,
+              0.955
+            ]
+          ],
+          "breakup": 0.018,
+          "min_length": 0.58
+        },
+        "style_warps": []
+      },
+      {
+        "curve": 6,
+        "topology": 2,
+        "root": {
+          "name": "back",
+          "center": [
+            0.0,
+            0.5428265399465709,
+            -0.8398448353890341
+          ],
+          "inv_radius": [
+            2.1,
+            2.0,
+            1.8
+          ],
+          "material_extent": [
+            0.66,
+            0.62
+          ],
+          "bias": 0.02
+        },
+        "material_scale": [
+          0.8,
+          0.78
+        ],
+        "material_offset": [
+          0,
+          0
+        ],
+        "texture": {
+          "type": "wavy",
+          "amplitude": 0.001,
+          "cycles": 1.35,
+          "start": 0.1,
+          "irregularity": 0.07,
+          "phase_coherence": 0.82,
+          "secondary": 0.14
+        },
+        "detail": {
+          "frizz_amplitude": 0.00026,
+          "frizz_frequency": 5.8,
+          "frizz_fraction": 0.24,
+          "flyaway_amplitude": 0.0025,
+          "flyaway_fraction": 0.02
+        },
+        "clumps": {
+          "primary": {
+            "cells_u": 4,
+            "cells_v": 4,
+            "site_jitter": 0.22,
+            "root_tightness": 0.015,
+            "mid_tightness": 0.38,
+            "tip_tightness": 0.2,
+            "crossover": 0.18,
+            "drift": 0.055,
+            "wave_amplitude": 0.115,
+            "wave_cycles": 0.85
+          },
+          "secondary": {
+            "cells_u": 10,
+            "cells_v": 10,
+            "site_jitter": 0.28,
+            "root_tightness": 0.01,
+            "mid_tightness": 0.19,
+            "tip_tightness": 0.1,
+            "crossover": 0.24,
+            "drift": 0.024,
+            "wave_amplitude": 0.022,
+            "wave_cycles": 2.0
+          },
+          "tip_spread": 0.12,
+          "twist_turns": 0.015
+        },
+        "cut_surface": {
+          "controls": [
+            [
+              0.945,
+              0.9539,
+              0.9539,
+              0.945
+            ],
+            [
+              0.9683,
+              0.9772,
+              0.9772,
+              0.9683
+            ],
+            [
+              0.9917,
+              1.0006,
+              1.0006,
+              0.9917
+            ],
+            [
+              1.015,
+              1.0239,
+              1.0239,
+              1.015
+            ]
+          ],
+          "breakup": 0.018,
+          "min_length": 0.58
+        },
+        "style_warps": []
+      },
+      {
+        "curve": 7,
+        "topology": 2,
+        "root": {
+          "name": "nape",
+          "center": [
+            0.0,
+            -0.14142135623730953,
+            -0.9899494936611666
+          ],
+          "inv_radius": [
+            2.2,
+            2.2,
+            1.7
+          ],
+          "material_extent": [
+            0.62,
+            0.58
+          ],
+          "bias": 0
+        },
+        "material_scale": [
+          0.8,
+          0.78
+        ],
+        "material_offset": [
+          0,
+          0
+        ],
+        "texture": {
+          "type": "wavy",
+          "amplitude": 0.001,
+          "cycles": 1.35,
+          "start": 0.1,
+          "irregularity": 0.07,
+          "phase_coherence": 0.82,
+          "secondary": 0.14
+        },
+        "detail": {
+          "frizz_amplitude": 0.00026,
+          "frizz_frequency": 5.8,
+          "frizz_fraction": 0.24,
+          "flyaway_amplitude": 0.0025,
+          "flyaway_fraction": 0.02
+        },
+        "clumps": {
+          "primary": {
+            "cells_u": 4,
+            "cells_v": 4,
+            "site_jitter": 0.22,
+            "root_tightness": 0.015,
+            "mid_tightness": 0.38,
+            "tip_tightness": 0.2,
+            "crossover": 0.18,
+            "drift": 0.055,
+            "wave_amplitude": 0.115,
+            "wave_cycles": 0.85
+          },
+          "secondary": {
+            "cells_u": 10,
+            "cells_v": 10,
+            "site_jitter": 0.28,
+            "root_tightness": 0.01,
+            "mid_tightness": 0.19,
+            "tip_tightness": 0.1,
+            "crossover": 0.24,
+            "drift": 0.024,
+            "wave_amplitude": 0.022,
+            "wave_cycles": 2.0
+          },
+          "tip_spread": 0.12,
+          "twist_turns": 0.015
+        },
+        "cut_surface": {
+          "controls": [
+            [
+              0.925,
+              0.9339,
+              0.9339,
+              0.925
+            ],
+            [
+              0.9483,
+              0.9572,
+              0.9572,
+              0.9483
+            ],
+            [
+              0.9717,
+              0.9806,
+              0.9806,
+              0.9717
+            ],
+            [
+              0.995,
+              1.0039,
+              1.0039,
+              0.995
+            ]
+          ],
+          "breakup": 0.018,
+          "min_length": 0.58
+        },
+        "style_warps": []
+      }
+    ]
+  }
+}

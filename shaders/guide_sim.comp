@@ -1,0 +1,198 @@
+#version 460
+#extension GL_GOOGLE_include_directive : require
+#include "hair_physics_common.glsl"
+
+// V37 reduced base-rod dynamics. High-frequency straight/wave/curl texture is
+// intrinsic rest geometry; this solver moves its low-frequency physical basis.
+layout(local_size_x=32) in;
+const uint GUIDE_POINTS=20u;
+
+struct Point { vec4 position; };
+struct GuideFrame { vec4 normal; };
+layout(std430,set=2,binding=0) buffer Current { Point cur[]; };
+layout(std430,set=2,binding=1) readonly buffer Rest { Point rest[]; };
+layout(std430,set=2,binding=3) buffer Velocity { vec4 velocity[]; };
+layout(std430,set=2,binding=8) buffer CurrentFrame { GuideFrame currentFrame[]; };
+layout(std430,set=2,binding=9) readonly buffer RestFrame { GuideFrame restFrame[]; };
+
+shared vec3 sPos[GUIDE_POINTS];
+shared vec3 sOld[GUIDE_POINTS];
+shared vec3 sVel[GUIDE_POINTS];
+shared vec3 sRest[GUIDE_POINTS];
+shared float sAttach[GUIDE_POINTS];
+shared float sRadius[GUIDE_POINTS];
+
+vec3 transportVector(vec3 x,vec3 fromN,vec3 toN){
+    vec3 a=hpSafeNormalize(fromN,vec3(0,-1,0));
+    vec3 b=hpSafeNormalize(toN,vec3(0,-1,0));
+    float c=clamp(dot(a,b),-1.0,1.0);
+    if(c>0.9999) return x;
+    if(c<-0.9999){
+        vec3 ref=abs(a.y)<0.8?vec3(0,1,0):vec3(1,0,0);
+        vec3 axis=hpSafeNormalize(cross(a,ref),vec3(0,0,1));
+        return 2.0*axis*dot(axis,x)-x;
+    }
+    vec3 v=cross(a,b);
+    float h=1.0/(1.0+c);
+    return x+cross(v,x)+cross(v,cross(v,x))*h;
+}
+
+void stretchConstraint(uint a,uint b,float dt){
+    vec3 d=sPos[b]-sPos[a];
+    float len=max(length(d),1e-7);
+    float restLen=max(length(sRest[b]-sRest[a]),1e-7);
+    float C=len-restLen;
+    vec3 n=d/len;
+    float wa=a==0u?0.0:1.0;
+    float wb=1.0;
+    float alpha=max(sim.dtSolver.y,0.0)/(dt*dt);
+    float dl=-C/max(wa+wb+alpha,1e-8);
+    sPos[a]+=wa*dl*(-n);
+    sPos[b]+=wb*dl*( n);
+}
+
+void bendConstraint(uint i,float dt){
+    uint a=i-1u,b=i,c=i+1u;
+    vec3 e1=sPos[b]-sPos[a];
+    vec3 e2=sPos[c]-sPos[b];
+    float l1=max(length(e1),1e-6), l2=max(length(e2),1e-6);
+    float cosNow=clamp(dot(e1,e2)/(l1*l2),-0.9999,0.9999);
+
+    vec3 r1=sRest[b]-sRest[a];
+    vec3 r2=sRest[c]-sRest[b];
+    float rl1=max(length(r1),1e-6), rl2=max(length(r2),1e-6);
+    float cosRest=clamp(dot(r1,r2)/(rl1*rl2),-0.9999,0.9999);
+    float C=cosNow-cosRest;
+
+    vec3 g1=e2/(l1*l2)-cosNow*e1/(l1*l1);
+    vec3 g2=e1/(l1*l2)-cosNow*e2/(l2*l2);
+    vec3 ga=-g1, gb=g1-g2, gc=g2;
+    float wa=a==0u?0.0:1.0, wb=1.0, wc=1.0;
+    float alpha=max(sim.dtSolver.z,0.0)/(dt*dt);
+    float denom=wa*dot(ga,ga)+wb*dot(gb,gb)+wc*dot(gc,gc)+alpha;
+    float dl=-C/max(denom,1e-8);
+    sPos[a]+=wa*dl*ga; sPos[b]+=wb*dl*gb; sPos[c]+=wc*dl*gc;
+}
+
+void rootBoundary(){
+    sPos[0]=sRest[0];
+    vec3 rd=hpSafeNormalize(sRest[1]-sRest[0],vec3(0,-1,0));
+    float rl=length(sRest[1]-sRest[0]);
+    sPos[1]=mix(sPos[1],sPos[0]+rd*rl,clamp(sim.forces.z,0.0,1.0));
+}
+
+void styleAttachmentBoundary(uint lane){
+    if(lane==0u) return;
+    float w=clamp(sAttach[lane],0.0,1.0);
+    if(w>0.0) sPos[lane]=mix(sPos[lane],sRest[lane],w);
+}
+
+void weakShapeMemory(uint lane,float dt){
+    if(lane==0u || sAttach[lane]>0.95) return;
+    float u=float(lane)/float(GUIDE_POINTS-1u);
+    float release=hpStyleRelease();
+    float tipScale=mix(1.0,1.0+max(sim.style.w,0.0),u*u);
+    float compliance=max(sim.style.x,0.0)*tipScale*mix(1.0,18.0,release);
+    float alpha=compliance/(dt*dt);
+    sPos[lane]+=(sRest[lane]-sPos[lane])/(1.0+alpha);
+}
+
+vec3 aerodynamicAcceleration(uint lane,uint guide){
+    float u=float(lane)/float(GUIDE_POINTS-1u);
+    uint a=lane>0u?lane-1u:lane;
+    uint b=lane+1u<GUIDE_POINTS?lane+1u:lane;
+    vec3 T=hpSafeNormalize(sPos[b]-sPos[a],vec3(0,-1,0));
+    vec3 airVelocity=hpAirVelocity(sPos[lane],guide);
+    vec3 airDirection=hpSafeNormalize(airVelocity,sim.wind.xyz);
+    vec3 relative=airVelocity-sVel[lane];
+    vec3 crossFlow=relative-T*dot(relative,T);
+    float rootFade=pow(clamp(u,0.0,1.0),max(sim.aero.w,0.25));
+    float exposure=hpWindExposure(sPos[lane],airDirection);
+    vec3 aDrag=max(sim.aero.x,0.0)*crossFlow*length(crossFlow)*rootFade*exposure;
+    float al=length(aDrag), cap=max(sim.aero.z,0.0);
+    if(cap>0.0 && al>cap) aDrag*=cap/al;
+    return aDrag;
+}
+
+void main(){
+    uint guide=gl_WorkGroupID.x;
+    uint lane=gl_LocalInvocationIndex;
+    bool laneValid=lane<GUIDE_POINTS;
+    uint idx=guide*GUIDE_POINTS+min(lane,GUIDE_POINTS-1u);
+    float dt=clamp(sim.dtSolver.x,1.0/240.0,1.0/30.0);
+
+    if(laneValid){
+        sOld[lane]=cur[idx].position.xyz;
+        sPos[lane]=sOld[lane];
+        sVel[lane]=velocity[idx].xyz;
+        sRest[lane]=(sim.headFromRest*vec4(rest[idx].position.xyz,1.0)).xyz;
+        sAttach[lane]=rest[idx].position.w;
+        sRadius[lane]=guideMeta[idx].x; // final effective radius, including root fade, authored once on CPU
+    }
+    barrier();
+
+    if(laneValid){
+        if(lane==0u){ sPos[lane]=sRest[lane]; sVel[lane]=vec3(0.0); }
+        else {
+            vec3 accel=vec3(0.0,sim.forces.x,0.0)+aerodynamicAcceleration(lane,guide);
+            sVel[lane]+=accel*dt;
+            sVel[lane]*=exp(-max(sim.forces.y,0.0)*dt);
+            sPos[lane]+=sVel[lane]*dt;
+            weakShapeMemory(lane,dt);
+            styleAttachmentBoundary(lane);
+            sPos[lane]=hpProjectBody(sPos[lane],sRadius[lane]);
+        }
+    }
+    barrier();
+
+    for(uint iter=0u;iter<8u;++iter){
+        uint parity=iter&1u;
+        if(laneValid && lane+1u<GUIDE_POINTS && (lane&1u)==parity) stretchConstraint(lane,lane+1u,dt);
+        barrier();
+        if(laneValid && lane>0u){ styleAttachmentBoundary(lane); sPos[lane]=hpProjectBody(sPos[lane],sRadius[lane]); }
+        if(laneValid && lane==0u) rootBoundary();
+        barrier();
+        for(uint color=0u;color<3u;++color){
+            if(laneValid && lane>=1u && lane+1u<GUIDE_POINTS && ((lane-1u)%3u)==color) bendConstraint(lane,dt);
+            barrier();
+            if(laneValid && lane>0u){ styleAttachmentBoundary(lane); sPos[lane]=hpProjectBody(sPos[lane],sRadius[lane]); }
+            if(laneValid && lane==0u) rootBoundary();
+            barrier();
+        }
+    }
+
+    // One thread constructs a rotation-minimizing material frame for the solved
+    // centerline. Dense followers consume these frames, so wisp cross-sections
+    // and analytical curl texture rotate coherently under deformation.
+    barrier();
+    if(lane==0u){
+        vec3 prevT=hpSafeNormalize(sPos[1]-sPos[0],vec3(0,-1,0));
+        vec3 N=restFrame[guide*GUIDE_POINTS].normal.xyz;
+        N=hpSafeNormalize(N-prevT*dot(N,prevT),vec3(1,0,0));
+        vec3 B=hpSafeNormalize(cross(prevT,N),vec3(0,0,1));
+        N=hpSafeNormalize(cross(B,prevT),N);
+        for(uint p=0u;p<GUIDE_POINTS;++p){
+            uint a=p>0u?p-1u:p;
+            uint b=p+1u<GUIDE_POINTS?p+1u:p;
+            vec3 T=hpSafeNormalize(sPos[b]-sPos[a],prevT);
+            if(p>0u) N=transportVector(N,prevT,T);
+            N=hpSafeNormalize(N-T*dot(N,T),N);
+            B=hpSafeNormalize(cross(T,N),B);
+            N=hpSafeNormalize(cross(B,T),N);
+            currentFrame[guide*GUIDE_POINTS+p].normal=vec4(N,0.0);
+            prevT=T;
+        }
+    }
+    barrier();
+
+    if(laneValid){
+        vec3 v=(sPos[lane]-sOld[lane])/dt;
+        if(lane==0u) v=vec3(0.0);
+        else {
+            v=hpContactVelocityCoulomb(sPos[lane],v,sRadius[lane],dt);
+            v*=1.0-clamp(sAttach[lane],0.0,1.0);
+        }
+        cur[idx].position=vec4(sPos[lane],cur[idx].position.w);
+        velocity[idx]=vec4(v,0.0);
+    }
+}

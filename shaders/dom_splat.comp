@@ -1,0 +1,89 @@
+#version 460
+#include "hair_render_common.glsl"
+
+// V40.2 directional finite-volume strand shadow construction. One workgroup
+// owns one reduced-guide segment and deposits projected fiber extinction into
+// four light-space depth layers for both explicit physical lights.  The mass is
+// normalized over the projected support capsule, so resolution changes do not
+// arbitrarily change shadow density.
+layout(local_size_x=128) in;
+const uint GUIDE_POINTS=20u;
+const uint SEGMENTS_PER_GUIDE=GUIDE_POINTS-1u;
+const float SQRT3=1.7320508075688772;
+struct Point { vec4 position; };
+struct GuidePointMeta { vec4 supportVolume; };
+layout(set=2,binding=0,std430) readonly buffer GuideCurrent { Point guideCurrent[]; };
+layout(set=2,binding=7,std430) readonly buffer GuideMeta { GuidePointMeta guideMeta[]; };
+layout(set=3,binding=3,std430) buffer PrimaryDeepOpacity { uint primaryDomFixed[]; };
+layout(set=3,binding=4,std430) buffer SecondaryDeepOpacity { uint secondaryDomFixed[]; };
+shared float partial[128];
+
+void lightBasis(vec3 L,out vec3 R,out vec3 U){
+    L=normalize(L);
+    vec3 ref=abs(L.y)<0.92?vec3(0,1,0):vec3(1,0,0);
+    R=normalize(cross(ref,L)); U=normalize(cross(L,R));
+}
+float sqDist2(vec2 p,vec2 a,vec2 b){
+    vec2 ab=b-a; float d=max(dot(ab,ab),1e-12);
+    float t=clamp(dot(p-a,ab)/d,0.0,1.0); vec2 q=a+t*ab; vec2 v=p-q; return dot(v,v);
+}
+float kernel(float d2,float r){ float x=max(0.0,1.0-d2/max(r*r,1e-10)); return x*x; }
+int domIndex(ivec2 p,int layer,int dim){ return layer*dim*dim+p.y*dim+p.x; }
+void deposit(bool secondary,int index,uint q){ if(q==0u)return; if(secondary)atomicAdd(secondaryDomFixed[index],q);else atomicAdd(primaryDomFixed[index],q); }
+
+void splat(vec3 a,vec3 b,float support,float fibers,float diameter,vec3 L,bool secondary){
+    int dim=max(int(matl.domParams.x+0.5),8);
+    int layers=clamp(int(matl.domParams.y+0.5),2,8);
+    float fixedScale=max(matl.domParams.z,1.0);
+    int opticalDim=max(int(matl.renderParams.x+0.5),2);
+    float cell=max(matl.opticalGrid.w,1e-5);
+    vec3 center=matl.opticalGrid.xyz+vec3(0.5*cell*float(opticalDim));
+    float halfSpan=max(0.5*cell*float(opticalDim)*SQRT3,0.05);
+    float pixel=2.0*halfSpan/float(dim);
+    vec3 R,U; lightBasis(L,R,U); L=normalize(L);
+    vec3 qa=a-center,qb=b-center;
+    vec2 pa=vec2(dot(qa,R),dot(qa,U));
+    vec2 pb=vec2(dot(qb,R),dot(qb,U));
+    vec2 lo=min(pa,pb)-vec2(support), hi=max(pa,pb)+vec2(support);
+    ivec2 c0=clamp(ivec2(floor((lo+halfSpan)/pixel)),ivec2(0),ivec2(dim-1));
+    ivec2 c1=clamp(ivec2(floor((hi+halfSpan)/pixel)),ivec2(0),ivec2(dim-1));
+    ivec2 ext=c1-c0+ivec2(1); uint count=uint(max(ext.x,0)*max(ext.y,0)); if(count==0u)return;
+    float sum=0.0;
+    for(uint linear=gl_LocalInvocationIndex;linear<count;linear+=gl_WorkGroupSize.x){
+        int x=int(linear%uint(ext.x)); int y=int(linear/uint(ext.x)); ivec2 c=c0+ivec2(x,y);
+        vec2 p=-vec2(halfSpan)+(vec2(c)+vec2(0.5))*pixel;
+        sum+=kernel(sqDist2(p,pa,pb),support);
+    }
+    partial[gl_LocalInvocationIndex]=sum; barrier();
+    for(uint stride=64u;stride>0u;stride>>=1u){ if(gl_LocalInvocationIndex<stride)partial[gl_LocalInvocationIndex]+=partial[gl_LocalInvocationIndex+stride]; barrier(); }
+    float sumW=partial[0]; if(sumW<=1e-8)return;
+    float projectedLen=length(pb-pa);
+    float opticalArea=diameter*fibers*max(projectedLen,diameter);
+    float tauMass=opticalArea/max(pixel*pixel,1e-12);
+    vec3 mid=0.5*(a+b)-center;
+    float z=clamp(0.5+0.5*dot(mid,L)/halfSpan,0.0,0.999999);
+    float lf=z*float(layers); int l0=clamp(int(floor(lf)),0,layers-1); int l1=min(l0+1,layers-1); float ft=clamp(lf-float(l0),0.0,1.0);
+    for(uint linear=gl_LocalInvocationIndex;linear<count;linear+=gl_WorkGroupSize.x){
+        int x=int(linear%uint(ext.x)); int y=int(linear/uint(ext.x)); ivec2 c=c0+ivec2(x,y);
+        vec2 p=-vec2(halfSpan)+(vec2(c)+vec2(0.5))*pixel;
+        float w=kernel(sqDist2(p,pa,pb),support)/sumW;
+        uint q0=uint(clamp(round(tauMass*w*(1.0-ft)*fixedScale),0.0,16777215.0));
+        uint q1=uint(clamp(round(tauMass*w*ft*fixedScale),0.0,16777215.0));
+        deposit(secondary,domIndex(c,l0,dim),q0); if(l1!=l0)deposit(secondary,domIndex(c,l1,dim),q1); else if(q1>0u)deposit(secondary,domIndex(c,l0,dim),q1);
+    }
+}
+
+void main(){
+    uint segmentId=gl_WorkGroupID.x, guideId=segmentId/SEGMENTS_PER_GUIDE, p=segmentId-guideId*SEGMENTS_PER_GUIDE;
+    if(guideId>=1600u||p>=SEGMENTS_PER_GUIDE)return;
+    uint i0=guideId*GUIDE_POINTS+p, i1=i0+1u; vec3 a=guideCurrent[i0].position.xyz,b=guideCurrent[i1].position.xyz;
+    float len=length(b-a); if(len<1e-7)return;
+    float fibers=max(0.0,0.5*(guideMeta[i0].supportVolume.z+guideMeta[i1].supportVolume.z)); if(fibers<=1e-4)return;
+    float cell=max(matl.opticalGrid.w,1e-5);
+    float radius=max(0.5*(guideMeta[i0].supportVolume.x+guideMeta[i1].supportVolume.x),0.5*cell);
+    float support=max(radius*max(matl.fiberShape.z,0.5),0.75*cell);
+    float u=(float(p)+0.5)/float(SEGMENTS_PER_GUIDE);
+    float diameter=max(matl.fiberShape.x,1e-6)*mix(1.0,clamp(matl.fiberShape.y,0.02,1.0),u);
+    splat(a,b,support,fibers,diameter,matl.primaryDirI.xyz,false); barrier();
+    if(matl.secondaryDirI.w>1e-4)splat(a,b,support,fibers,diameter,matl.secondaryDirI.xyz,true);
+}

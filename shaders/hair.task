@@ -1,0 +1,52 @@
+#version 460
+#extension GL_EXT_mesh_shader : require
+
+layout(local_size_x=32) in;
+
+struct HairCluster { uvec4 range; vec4 sphere; };
+struct StrandDesc { vec4 rootNormalDiameter; uvec4 guides; vec4 weights; vec4 fiber; };
+layout(std430,set=1,binding=0) readonly buffer StrandBuffer { StrandDesc strands[]; };
+layout(std430,set=1,binding=1) readonly buffer Clusters { HairCluster clusters[]; };
+
+layout(set=0,binding=0,std140) uniform Frame {
+    mat4 viewProj;
+    vec4 cameraPos;
+    vec4 frustumPlanes[6];
+    vec4 screenParams; // width, height, tanHalfFovY, MSAA samples
+} frame;
+
+struct Payload {
+    uint firstStrand;
+    uint strandCount;
+    uint strandStride;
+    uint renderPoints;
+};
+taskPayloadSharedEXT Payload payload;
+shared uint emitCount;
+
+bool visibleSphere(vec4 s){
+    for(int i=0;i<6;++i)
+        if(dot(frame.frustumPlanes[i].xyz,s.xyz)+frame.frustumPlanes[i].w < -s.w) return false;
+    return true;
+}
+
+void main(){
+    if(gl_LocalInvocationIndex==0u){
+        HairCluster c=clusters[gl_WorkGroupID.x];
+        payload.firstStrand=c.range.x;
+        payload.strandCount=c.range.y;
+
+        // V44 keeps every authored render strand. Geometric minification is handled
+        // by primary-visibility MSAA, not by widening/decimating fibers.
+        float d=max(length(frame.cameraPos.xyz-c.sphere.xyz)-c.sphere.w,0.03);
+        float worldPerPixel=2.0*d*max(frame.screenParams.z,1e-4)/max(frame.screenParams.y,1.0);
+        float pxRadius=c.sphere.w/max(worldPerPixel,1e-6);
+        payload.strandStride=1u;
+        if(pxRadius>120.0) payload.renderPoints=33u;
+        else if(pxRadius>30.0) payload.renderPoints=17u;
+        else payload.renderPoints=9u;
+        emitCount=visibleSphere(c.sphere)?c.range.y:0u;
+    }
+    barrier();
+    EmitMeshTasksEXT(emitCount,1u,1u);
+}

@@ -1,0 +1,62 @@
+#version 460
+#extension GL_GOOGLE_include_directive : require
+#include "hair_physics_common.glsl"
+
+// Grid pressure converts strand-strand collision into a volumetric packing
+// constraint. This is the collective term that prevents many guides from
+// collapsing onto the same face surface.
+layout(local_size_x=256) in;
+
+ivec3 coordFromIndex(uint i){
+    int x=int(i%uint(HP_GRID_DIM));
+    uint q=i/uint(HP_GRID_DIM);
+    int y=int(q%uint(HP_GRID_DIM));
+    int z=int(q/uint(HP_GRID_DIM));
+    return ivec3(x,y,z);
+}
+
+float packingAt(ivec3 c){
+    return hpNodePacking(c);
+}
+
+void main(){
+    uint i=gl_GlobalInvocationID.x;
+    if(i>=HP_GRID_COUNT) return;
+    VolumeAccumNode a=volumeAccum[i];
+    float m=float(a.occupancy);
+    if(m<0.5){
+        volumeState[i]=vec4(0.0);
+        return;
+    }
+
+    vec3 v=vec3(float(a.momentumX),float(a.momentumY),float(a.momentumZ))/(m*HP_VEL_SCALE);
+    float rho=m/HP_OCC_SCALE;
+    float target=max(sim.volume.x,0.05);
+    float h=max(sim.grid.w,1e-5);
+    ivec3 c=coordFromIndex(i);
+
+    float pL=max(packingAt(c-ivec3(1,0,0))-target,0.0);
+    float pR=max(packingAt(c+ivec3(1,0,0))-target,0.0);
+    float pD=max(packingAt(c-ivec3(0,1,0))-target,0.0);
+    float pU=max(packingAt(c+ivec3(0,1,0))-target,0.0);
+    float pB=max(packingAt(c-ivec3(0,0,1))-target,0.0);
+    float pF=max(packingAt(c+ivec3(0,0,1))-target,0.0);
+    vec3 gradP=vec3(pR-pL,pU-pD,pF-pB)/(2.0*h);
+    float compression=max(rho-target,0.0);
+    vec3 pressureAccel=-max(sim.volume.y,0.0)*compression*gradP/max(rho,0.15);
+    float aLen=length(pressureAccel);
+    if(aLen>32.0) pressureAccel*=32.0/aLen;
+    v+=pressureAccel*clamp(sim.dtSolver.x,1.0/240.0,1.0/30.0);
+
+    // The body is also a grid boundary. Guide contact remains the accurate
+    // collision layer; this no-inflow condition prevents the continuum from
+    // transporting hair momentum through the avatar between rod solves.
+    vec3 nodePos=sim.grid.xyz+vec3(c)*h;
+    ContactHit hit=hpQueryBody(nodePos,0.0);
+    if(hit.distance<0.80*h){
+        float vn=dot(v,hit.normal);
+        if(vn<0.0) v-=hit.normal*vn;
+    }
+
+    volumeState[i]=vec4(v,min(rho,8.0));
+}
